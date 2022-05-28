@@ -3,8 +3,9 @@ package com.example.runnerapp
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import java.util.Timer
-import java.util.TimerTask
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.*
 
 class TimerService : Service() {
 
@@ -26,8 +27,7 @@ class TimerService : Service() {
     private inner class TimeTask(private var time: Double) : TimerTask() {
         override fun run() {
             val intent = Intent(TIMER_UPDATED)
-            time++
-            intent.putExtra(TIME_EXTRA, time)
+//            intent.putExtra(TIME_EXTRA, time)
             sendBroadcast(intent)
         }
     }

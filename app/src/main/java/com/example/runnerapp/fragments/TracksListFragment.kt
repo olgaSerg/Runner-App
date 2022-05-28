@@ -50,20 +50,26 @@ class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
         tracksRecyclerView = view.findViewById(R.id.recycler_view_tracks)
         fab = view.findViewById(R.id.floating_action_button)
 
-        val tracksRecyclerView = tracksRecyclerView ?: return
         val fab = fab ?: return
 
+        fab.setOnClickListener {
+            fabClickListener?.onFABClick()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        displayTracksList()
+    }
+
+    private fun displayTracksList() {
         val db = App.instance?.db ?: return
+        val tracksRecyclerView = tracksRecyclerView ?: return
         val tracksProvider = GetTracksProvider()
         tracksProvider.getTracksAsync(db).onSuccess({
             val tracks = it.result
             tracksRecyclerView.layoutManager = LinearLayoutManager(activity)
             tracksRecyclerView.adapter = TracksListAdapter(tracks, recyclerViewTrackItemClickListener!!)
-//            db.close()
         }, Task.UI_THREAD_EXECUTOR)
-
-        fab.setOnClickListener {
-            fabClickListener?.onFABClick()
-        }
     }
 }

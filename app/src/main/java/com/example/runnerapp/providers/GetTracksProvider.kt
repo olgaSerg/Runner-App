@@ -19,7 +19,7 @@ class GetTracksProvider {
     fun getTracksAsync(db: SQLiteDatabase): Task<ArrayList<TrackModel>> {
         return Task.callInBackground {
             val cursor = db.rawQuery(
-                """SELECT id, start_time, distance, running_time FROM track""",
+                """SELECT id, start_time, distance, running_time FROM track ORDER BY start_time DESC""",
                 null
             )
             val tracks = arrayListOf<TrackModel>()

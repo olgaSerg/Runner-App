@@ -18,7 +18,9 @@ import com.example.runnerapp.providers.RecordTrackProvider
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
-import java.util.Date
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.math.roundToInt
 
 const val UPDATE_INTERVAL = (10 * 1000 /* 10 secs */).toLong()
@@ -32,7 +34,7 @@ class RunningActivity : AppCompatActivity() {
     private var timerStarted = false
     private var time = 0.0
     private var serviceIntent: Intent? = null
-    private var currentDate: Date? = null
+    private var startTime: Date? = null
     private var routeList = arrayListOf<LatLng>()
     private var totalDistance = 0.0
     private var mLocationRequest: LocationRequest? = null
@@ -88,7 +90,7 @@ class RunningActivity : AppCompatActivity() {
         buttonStart.setOnClickListener {
             buttonStart.isInvisible = true
             buttonFinish.isInvisible = false
-            currentDate = Date()
+            startTime = Date()
             mLocationRequest = LocationRequest.create()
             mLocationRequest!!.interval = UPDATE_INTERVAL
             mLocationRequest!!.fastestInterval = FASTEST_INTERVAL
@@ -107,8 +109,8 @@ class RunningActivity : AppCompatActivity() {
             stopTimer()
             buttonFinish.isInvisible = true
             val track = TrackModel()
-            track.duration = time.toLong()
-            track.startTime = currentDate
+            track.duration = time.toLong() / 1000
+            track.startTime = startTime
             track.routeList = routeList
 //            totalDistance = 53.49
             track.distance = totalDistance.toInt()
@@ -128,6 +130,11 @@ class RunningActivity : AppCompatActivity() {
         timerStarted = true
     }
 
+    private fun formatTime(time: Date): String {
+        val timeFormat: DateFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
+        return timeFormat.format(time)
+    }
+
     private fun stopTimer() {
         stopService(serviceIntent)
         timerStarted = false
@@ -136,22 +143,25 @@ class RunningActivity : AppCompatActivity() {
     private val updateTime: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val textViewTimer = textViewTimer ?: return
-            time = intent.getDoubleExtra(TimerService.TIME_EXTRA, 0.0)
+            val currentTime = Date()
+            time = 1.0 * (currentTime.time - startTime!!.time)
+//            time = intent.getDoubleExtra(TimerService.TIME_EXTRA, 0.0)
             textViewTimer.text = getTimeStringFromDouble(time)
         }
     }
 
     private fun getTimeStringFromDouble(time: Double): String {
-        val resultInt = time.roundToInt()
+        val resultInt = time.roundToInt() / 1000
         val hours = resultInt % 86400 / 3600
         val minutes = resultInt % 86400 % 3600 / 60
         val seconds = resultInt % 86400 % 3600 % 60
+        val millis = time.roundToInt() % 1000
 
-        return makeTimeString(hours, minutes, seconds)
+        return makeTimeString(hours, minutes, seconds, millis)
     }
 
-    private fun makeTimeString(hour: Int, min: Int, sec: Int): String =
-        String.format("%02d:%02d:%02d", hour, min, sec)
+    private fun makeTimeString(hour: Int, min: Int, sec: Int, millis: Int): String =
+        String.format("%02d:%02d:%02d.%03d", hour, min, sec, millis)
 
     override fun onBackPressed() {
         if (timerStarted) {
