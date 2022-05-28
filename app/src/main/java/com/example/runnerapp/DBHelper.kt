@@ -11,6 +11,7 @@ const val ID = "id"
 const val START_TIME = "start_time"
 const val DISTANCE = "distance"
 const val RUNNING_TIME = "running_time"
+const val ROUTE = "route"
 
 class DBHelper(context: Context) :
     SQLiteOpenHelper(context, "TracksDB", null, DB_VERSION) {
@@ -41,7 +42,8 @@ class DBHelper(context: Context) :
                 $ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $START_TIME STRING,
                 $DISTANCE INTEGER,
-                $RUNNING_TIME LONG
+                $RUNNING_TIME LONG,
+                $ROUTE JSONArray
             );
             """
                 )

@@ -28,7 +28,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         setContentView(R.layout.activity_main_screen)
 
         supportFragmentManager.beginTransaction().apply {
-            setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left)
+            setCustomAnimations(R.anim.enter_right_to_left, R.anim.exit_right_to_left)
             replace(R.id.fragment_container, TracksListFragment())
             commit()
         }
@@ -91,7 +91,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
 
     override fun onTrackClick(track: TrackModel) {
         supportFragmentManager.beginTransaction().apply {
-            replace(R.id.fragment_container, SelectedTrackFragment.newInstance(track))
+            replace(R.id.fragment_container, SelectedTrackFragment.newInstance(track.id!!))
             addToBackStack("SelectedTrack")
             commit()
         }

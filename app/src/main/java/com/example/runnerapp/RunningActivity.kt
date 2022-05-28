@@ -1,23 +1,28 @@
 package com.example.runnerapp
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import android.os.Looper
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isInvisible
 import com.example.runnerapp.models.TrackModel
 import com.example.runnerapp.providers.RecordTrackProvider
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.*
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.LatLng
+import java.util.Date
 import kotlin.math.roundToInt
 
+const val UPDATE_INTERVAL = (10 * 1000 /* 10 secs */).toLong()
+const val FASTEST_INTERVAL: Long = 2000 /* 2 sec */
 
 class RunningActivity : AppCompatActivity() {
 
@@ -27,8 +32,45 @@ class RunningActivity : AppCompatActivity() {
     private var timerStarted = false
     private var time = 0.0
     private var serviceIntent: Intent? = null
-    var currentDate: Date? = null
+    private var currentDate: Date? = null
+    private var routeList = arrayListOf<LatLng>()
+    private var totalDistance = 0.0
+    private var mLocationRequest: LocationRequest? = null
+    private var mFusedLocationClient: FusedLocationProviderClient? = null
 
+    private var mLocationCallback: LocationCallback = object : LocationCallback() {
+
+        override fun onLocationResult(locationResult: LocationResult) {
+            val locationList = locationResult.locations
+            if (locationList.isNotEmpty()) {
+                val location = locationList.last()
+                if (routeList.isEmpty()) {
+                    val newLocation = LatLng(location.latitude, location.longitude)
+                    routeList.add(newLocation)
+                }
+                if (routeList.isNotEmpty()) {
+                    val lastLocation = routeList[routeList.lastIndex]
+                    val newLocation = LatLng(location.latitude, location.longitude)
+                    if (lastLocation != newLocation) {
+                        val result: FloatArray = floatArrayOf(0.0F)
+                        Location.distanceBetween(
+                            lastLocation.latitude,
+                            lastLocation.longitude,
+                            newLocation.latitude,
+                            newLocation.longitude,
+                            result
+                        )
+                        if (result[0] >= 5) {
+                            routeList.add(newLocation)
+                            totalDistance += result[0]
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_running)
@@ -47,17 +89,29 @@ class RunningActivity : AppCompatActivity() {
             buttonStart.isInvisible = true
             buttonFinish.isInvisible = false
             currentDate = Date()
+            mLocationRequest = LocationRequest.create()
+            mLocationRequest!!.interval = UPDATE_INTERVAL
+            mLocationRequest!!.fastestInterval = FASTEST_INTERVAL
+            mLocationRequest!!.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+            mFusedLocationClient?.requestLocationUpdates(
+                mLocationRequest!!,
+                mLocationCallback,
+                Looper.myLooper()!!
+            )
             startTimer()
         }
 
         buttonFinish.setOnClickListener {
+            mFusedLocationClient?.removeLocationUpdates(mLocationCallback)
             stopTimer()
             buttonFinish.isInvisible = true
             val track = TrackModel()
             track.duration = time.toLong()
             track.startTime = currentDate
-
-            track.distance = 1759
+            track.routeList = routeList
+//            totalDistance = 53.49
+            track.distance = totalDistance.toInt()
             val recordTrackProvider = RecordTrackProvider()
             recordTrackProvider.recordTrackExecute(db, track).onSuccess {
                 Toast.makeText(this, "Трек записан", Toast.LENGTH_SHORT).show()
@@ -101,11 +155,12 @@ class RunningActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if (timerStarted) {
-            Toast.makeText(applicationContext, "Нажмите на кнопку \"Финиш\"", Toast.LENGTH_SHORT).show()
-        }
-        else {
+            Toast.makeText(applicationContext, "Нажмите на кнопку \"Финиш\"", Toast.LENGTH_SHORT)
+                .show()
+        } else {
             super.onBackPressed()
         }
     }
 }
+
 

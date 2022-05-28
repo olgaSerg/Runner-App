@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.runnerapp.fragments.LoginFragment
 import com.example.runnerapp.fragments.RegistrationFragment
-import com.example.runnerapp.fragments.TracksListFragment
 
 class MainActivity : AppCompatActivity(), RegistrationFragment.OnButtonLoginClickListener,
     LoginFragment.OnButtonRegistrationClickListener, LoginFragment.OnButtonLoginClickListener {
@@ -26,7 +25,7 @@ class MainActivity : AppCompatActivity(), RegistrationFragment.OnButtonLoginClic
 
     private fun loadRegistrationFragment() {
         supportFragmentManager.beginTransaction().apply {
-            setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left)
+            setCustomAnimations(R.anim.enter_right_to_left, R.anim.exit_right_to_left)
             replace(R.id.fragment_container, RegistrationFragment())
             commit()
         }
@@ -34,7 +33,7 @@ class MainActivity : AppCompatActivity(), RegistrationFragment.OnButtonLoginClic
 
     private fun loadLoginFragment() {
         supportFragmentManager.beginTransaction().apply {
-            setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left)
+            setCustomAnimations(R.anim.enter_left_to_right, R.anim.exit_left_to_right)
             replace(R.id.fragment_container, LoginFragment())
             commit()
         }

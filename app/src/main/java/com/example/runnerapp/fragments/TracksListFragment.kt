@@ -17,7 +17,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
 
     private var tracksRecyclerView: RecyclerView? = null
-    private var tracks: ArrayList<TrackModel> = arrayListOf()
     private var fab: FloatingActionButton? = null
     private var fabClickListener: OnFABClickListener? = null
     private var recyclerViewTrackItemClickListener: OnTracksRecyclerViewItemClickListener? = null
@@ -54,13 +53,13 @@ class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
         val tracksRecyclerView = tracksRecyclerView ?: return
         val fab = fab ?: return
 
-        val db = App.instance?.dBHelper?.readableDatabase ?: return
+        val db = App.instance?.db ?: return
         val tracksProvider = GetTracksProvider()
-        tracksProvider.getTracksExecute(db).onSuccess({
-            tracks = it.result
+        tracksProvider.getTracksAsync(db).onSuccess({
+            val tracks = it.result
             tracksRecyclerView.layoutManager = LinearLayoutManager(activity)
             tracksRecyclerView.adapter = TracksListAdapter(tracks, recyclerViewTrackItemClickListener!!)
-            db.close()
+//            db.close()
         }, Task.UI_THREAD_EXECUTOR)
 
         fab.setOnClickListener {

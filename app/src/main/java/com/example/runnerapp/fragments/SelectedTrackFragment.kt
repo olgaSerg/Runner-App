@@ -7,66 +7,42 @@ import android.location.Location
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.View
-import android.widget.Button
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import bolts.Task
+import com.example.runnerapp.App
 import com.example.runnerapp.PermissionUtils
 import com.example.runnerapp.R
 import com.example.runnerapp.models.TrackModel
-import com.google.android.gms.location.*
+import com.example.runnerapp.providers.GetTracksProvider
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.*
+import com.google.android.gms.maps.model.LatLngBounds
 
-const val TRACK = "track"
+
+
+
+const val TRACK_ID = "track_id"
 const val LOCATION_PERMISSION_REQUEST_CODE = 1
+private const val DEFAULT_ZOOM = 15
 
-class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track), GoogleMap.OnMyLocationButtonClickListener,
-    GoogleMap.OnMyLocationClickListener, OnMapReadyCallback {
+class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
+    GoogleMap.OnMyLocationButtonClickListener,
+    OnMapReadyCallback {
+
     private var textViewDistance: TextView? = null
     private var textViewDuration: TextView? = null
     private lateinit var mMap: GoogleMap
-    private var routeList = arrayListOf<LatLng>()
-    private var totalDistance = 0.0
-
-    private var mLocationCallback: LocationCallback = object : LocationCallback() {
-
-        override fun onLocationResult(locationResult: LocationResult) {
-            val locationList = locationResult.locations
-            if (locationList.isNotEmpty()) {
-                val location = locationList.last()
-                if (routeList.isEmpty()) {
-                    val newLocation = LatLng(location.latitude, location.longitude)
-                    routeList.add(newLocation)
-                }
-                if (routeList.isNotEmpty()) {
-                    val lastLocation = routeList[routeList.lastIndex]
-                    val newLocation = LatLng(location.latitude, location.longitude)
-                    if (lastLocation != newLocation) {
-                        val result: FloatArray = floatArrayOf(0.0F)
-                        Location.distanceBetween(
-                            lastLocation.latitude,
-                            lastLocation.longitude,
-                            newLocation.latitude,
-                            newLocation.longitude,
-                            result
-                        )
-                        if (result[0] >= 5) {
-                            routeList.add(newLocation)
-                            totalDistance += result[0]
-                        }
-                    }
-                }
-            }
-        }
-    }
+    private var selectedTrack: TrackModel? = null
 
     companion object {
-        fun newInstance(track: TrackModel): SelectedTrackFragment {
+        fun newInstance(trackId: Int): SelectedTrackFragment {
             val args = Bundle()
-            args.putSerializable(TRACK, track)
+            args.putSerializable(TRACK_ID, trackId)
             val selectedTrackFragment = SelectedTrackFragment()
             selectedTrackFragment.arguments = args
             return selectedTrackFragment
@@ -79,34 +55,66 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track), Google
         textViewDistance = view.findViewById(R.id.text_view_distance)
         textViewDuration = view.findViewById(R.id.text_view_running_time)
 
-        val mapFragment: SupportMapFragment = childFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
 
-        val selectedTrack = arguments?.getSerializable(TRACK) as TrackModel
-        displayTrack(selectedTrack)
+
+
+        val selectedTrackId: Int = arguments?.getSerializable(TRACK_ID) as Int
+        val db = App.instance?.db ?: return
+        val tracksProvider = GetTracksProvider()
+        val onMapReadyCallback = this
+        tracksProvider.getSelectedTrackAsync(db, selectedTrackId).onSuccess({
+//            Thread.sleep(10000)
+            selectedTrack = it.result
+        }, Task.BACKGROUND_EXECUTOR).onSuccess({
+            val mapFragment: SupportMapFragment = childFragmentManager
+                .findFragmentById(R.id.map) as SupportMapFragment
+            mapFragment.getMapAsync(onMapReadyCallback)
+        }, Task.UI_THREAD_EXECUTOR)
     }
 
-    private fun displayTrack(selectedTrack: TrackModel) {
+    private fun displayTrack(track: TrackModel) {
         val textViewDistance = textViewDistance ?: return
         val textViewDuration = textViewDuration ?: return
-        textViewDistance.setText(selectedTrack.distance.toString())
-        textViewDuration.setText(selectedTrack.duration.toString())
-    }
-
-    override fun onMyLocationButtonClick(): Boolean {
-        return false
-    }
-
-    override fun onMyLocationClick(p0: Location) {
-        TODO("Not yet implemented")
+        textViewDistance.setText(track.distance.toString())
+        textViewDuration.setText(track.duration.toString())
+//        selectedTrack = track
+//        enableMyLocation(selectedTrack!!)
     }
 
     @SuppressLint("MissingPermission")
     override fun onMapReady(map: GoogleMap) {
         mMap = map
         mMap.setOnMyLocationButtonClickListener(this)
-        mMap.setOnMyLocationClickListener(this)
+        displayTrack(selectedTrack!!)
+        mMap.addPolyline(
+            PolylineOptions()
+                .clickable(true)
+                .color(R.color.track_color)
+                .addAll(
+                    selectedTrack!!.routeList!!
+                )
+        )
+
+        val builder = LatLngBounds.Builder()
+        for (latLng in selectedTrack!!.routeList!!) {
+            builder.include(latLng)
+        }
+        val bounds = builder.build()
+        mMap.moveCamera(
+            CameraUpdateFactory.newLatLngBounds(bounds, 100))
+
+        mMap.addMarker(
+            MarkerOptions()
+                .position(selectedTrack!!.routeList!!.first())
+                .title("Старт")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+        )
+
+        mMap.addMarker(
+            MarkerOptions()
+                .position(selectedTrack!!.routeList!!.last())
+                .title("Финиш")
+        )
         enableMyLocation()
     }
 
@@ -150,6 +158,15 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track), Google
             ),
             LOCATION_PERMISSION_REQUEST_CODE
         )
+
+
         // [END maps_check_location_permission]
     }
+
+    override fun onMyLocationButtonClick(): Boolean {
+        return false
+    }
+
+
+
 }
