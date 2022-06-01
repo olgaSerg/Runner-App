@@ -14,7 +14,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-
 class TracksListAdapter(
     private val tracks: List<TrackModel>,
     private val recyclerViewItemClickListener: TracksListFragment.OnTracksRecyclerViewItemClickListener

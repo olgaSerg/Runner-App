@@ -3,9 +3,8 @@ package com.example.runnerapp
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Timer
+import java.util.TimerTask
 
 class TimerService : Service() {
 
@@ -14,8 +13,7 @@ class TimerService : Service() {
     private val timer = Timer()
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        val time = intent.getDoubleExtra(TIME_EXTRA, 0.0)
-        timer.scheduleAtFixedRate(TimeTask(time), 0, 10)
+        timer.scheduleAtFixedRate(TimeTask(), 0, 10)
         return START_NOT_STICKY
     }
 
@@ -24,10 +22,9 @@ class TimerService : Service() {
         super.onDestroy()
     }
 
-    private inner class TimeTask(private var time: Double) : TimerTask() {
+    private inner class TimeTask() : TimerTask() {
         override fun run() {
             val intent = Intent(TIMER_UPDATED)
-//            intent.putExtra(TIME_EXTRA, time)
             sendBroadcast(intent)
         }
     }

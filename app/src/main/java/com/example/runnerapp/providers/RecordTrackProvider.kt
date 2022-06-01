@@ -3,9 +3,7 @@ package com.example.runnerapp.providers
 import android.database.sqlite.SQLiteDatabase
 import bolts.Task
 import com.example.runnerapp.models.TrackModel
-import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
-import org.json.JSONArray
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date

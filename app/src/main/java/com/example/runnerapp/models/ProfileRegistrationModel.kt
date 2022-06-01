@@ -5,5 +5,4 @@ class ProfileRegistrationModel(
     var firstName: String? = null,
     var lastName: String? = null,
     var password: String? = null
-) {
-}
+)

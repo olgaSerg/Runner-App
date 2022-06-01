@@ -6,12 +6,9 @@ import com.example.runnerapp.models.TrackModel
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import org.json.JSONArray
-import org.json.JSONObject
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 import kotlin.collections.ArrayList
-import android.util.Log
 import java.lang.reflect.Type
 
 class GetTracksProvider {

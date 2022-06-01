@@ -4,12 +4,12 @@
         android:id="@+id/group"
         android:checkableBehavior="single">
         <item
-            android:id="@+id/item1"
+            android:id="@+id/main_screen_item"
             android:title="Главный экран"
-            android:checked="true" />
+            android:icon="@drawable/ic_menu_24" />
         <item
-            android:id="@+id/item2"
-            android:title="Настройки" />
+            android:id="@+id/notification_item"
+            android:icon="@drawable/ic_reminders_24"
+            android:title="Напоминанания" />
     </group>
-
 </menu>

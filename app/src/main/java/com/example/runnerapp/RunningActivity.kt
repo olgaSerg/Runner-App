@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.database.sqlite.SQLiteDatabase
 import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -15,16 +16,17 @@ import android.widget.Toast
 import androidx.core.view.isInvisible
 import com.example.runnerapp.models.TrackModel
 import com.example.runnerapp.providers.RecordTrackProvider
-import com.google.android.gms.location.*
-import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 import kotlin.math.roundToInt
 
-const val UPDATE_INTERVAL = (10 * 1000 /* 10 secs */).toLong()
-const val FASTEST_INTERVAL: Long = 2000 /* 2 sec */
+const val UPDATE_INTERVAL = (10 * 1000).toLong()
+const val FASTEST_INTERVAL: Long = 2000
 
 class RunningActivity : AppCompatActivity() {
 
@@ -81,47 +83,37 @@ class RunningActivity : AppCompatActivity() {
         buttonStart = findViewById(R.id.button_start)
         buttonFinish = findViewById(R.id.button_finish)
 
-
-        val buttonStart = buttonStart ?: return
         val buttonFinish = buttonFinish ?: return
         val db = App.instance?.dBHelper?.writableDatabase ?: return
 
+        setButtonStartListener(buttonFinish)
+        setButtonFinishListener(buttonFinish, db)
 
+        serviceIntent = Intent(applicationContext, TimerService::class.java)
+        registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun setButtonStartListener(buttonFinish: Button) {
+        val buttonStart = buttonStart ?: return
         buttonStart.setOnClickListener {
             buttonStart.isInvisible = true
             buttonFinish.isInvisible = false
             startTime = Date()
             mLocationRequest = LocationRequest.create()
-            mLocationRequest!!.interval = UPDATE_INTERVAL
-            mLocationRequest!!.fastestInterval = FASTEST_INTERVAL
-            mLocationRequest!!.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-            mFusedLocationClient?.requestLocationUpdates(
-                mLocationRequest!!,
-                mLocationCallback,
-                Looper.myLooper()!!
-            )
-            startTimer()
-        }
-
-        buttonFinish.setOnClickListener {
-            mFusedLocationClient?.removeLocationUpdates(mLocationCallback)
-            stopTimer()
-            buttonFinish.isInvisible = true
-            val track = TrackModel()
-            track.duration = time.toLong() / 1000
-            track.startTime = startTime
-            track.routeList = routeList
-//            totalDistance = 53.49
-            track.distance = totalDistance.toInt()
-            val recordTrackProvider = RecordTrackProvider()
-            recordTrackProvider.recordTrackExecute(db, track).onSuccess {
-                Toast.makeText(this, "Трек записан", Toast.LENGTH_SHORT).show()
+            if (mLocationRequest != null) {
+                mLocationRequest!!.interval = UPDATE_INTERVAL
+                mLocationRequest!!.fastestInterval = FASTEST_INTERVAL
+                mLocationRequest!!.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+                mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+                mFusedLocationClient?.requestLocationUpdates(
+                    mLocationRequest!!,
+                    mLocationCallback,
+                    Looper.myLooper()!!
+                )
+                startTimer()
             }
         }
-
-        serviceIntent = Intent(applicationContext, TimerService::class.java)
-        registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
     }
 
     private fun startTimer() {
@@ -130,9 +122,19 @@ class RunningActivity : AppCompatActivity() {
         timerStarted = true
     }
 
-    private fun formatTime(time: Date): String {
-        val timeFormat: DateFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
-        return timeFormat.format(time)
+    private fun setButtonFinishListener(buttonFinish: Button, db: SQLiteDatabase) {
+        buttonFinish.setOnClickListener {
+            mFusedLocationClient?.removeLocationUpdates(mLocationCallback)
+            stopTimer()
+            buttonFinish.isInvisible = true
+            val track = TrackModel()
+            track.duration = time.toLong() / 1000
+            track.startTime = startTime
+            track.routeList = routeList
+            track.distance = totalDistance.toInt()
+            val recordTrackProvider = RecordTrackProvider()
+            recordTrackProvider.recordTrackExecute(db, track)
+        }
     }
 
     private fun stopTimer() {
@@ -144,9 +146,10 @@ class RunningActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             val textViewTimer = textViewTimer ?: return
             val currentTime = Date()
-            time = 1.0 * (currentTime.time - startTime!!.time)
-//            time = intent.getDoubleExtra(TimerService.TIME_EXTRA, 0.0)
-            textViewTimer.text = getTimeStringFromDouble(time)
+            if (startTime != null) {
+                time = 1.0 * (currentTime.time - startTime!!.time)
+                textViewTimer.text = getTimeStringFromDouble(time)
+            }
         }
     }
 
@@ -165,7 +168,7 @@ class RunningActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if (timerStarted) {
-            Toast.makeText(applicationContext, "Нажмите на кнопку \"Финиш\"", Toast.LENGTH_SHORT)
+            Toast.makeText(applicationContext, "Нажмите кнопку \"Финиш\"", Toast.LENGTH_SHORT)
                 .show()
         } else {
             super.onBackPressed()

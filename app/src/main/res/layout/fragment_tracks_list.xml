@@ -20,7 +20,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        app:srcCompat="@drawable/ic_add_24"/>
+        app:srcCompat="@drawable/ic_add_24"
+        app:layout_behavior="com.example.runnerapp.FabBehaviour"
+        android:contentDescription="@string/ann_new_track" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

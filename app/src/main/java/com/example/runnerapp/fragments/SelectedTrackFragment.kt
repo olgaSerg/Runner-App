@@ -3,7 +3,6 @@ package com.example.runnerapp.fragments
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.View
@@ -23,12 +22,8 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.maps.model.LatLngBounds
 
-
-
-
 const val TRACK_ID = "track_id"
 const val LOCATION_PERMISSION_REQUEST_CODE = 1
-private const val DEFAULT_ZOOM = 15
 
 class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     GoogleMap.OnMyLocationButtonClickListener,
@@ -55,13 +50,14 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
         textViewDistance = view.findViewById(R.id.text_view_distance)
         textViewDuration = view.findViewById(R.id.text_view_running_time)
 
+        val onMapReadyCallback = this
+        getSelectedTrack(onMapReadyCallback)
+    }
 
-
-
+    private fun getSelectedTrack(onMapReadyCallback: SelectedTrackFragment) {
         val selectedTrackId: Int = arguments?.getSerializable(TRACK_ID) as Int
         val db = App.instance?.db ?: return
         val tracksProvider = GetTracksProvider()
-        val onMapReadyCallback = this
         tracksProvider.getSelectedTrackAsync(db, selectedTrackId).onSuccess({
 //            Thread.sleep(10000)
             selectedTrack = it.result
@@ -75,10 +71,8 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     private fun displayTrack(track: TrackModel) {
         val textViewDistance = textViewDistance ?: return
         val textViewDuration = textViewDuration ?: return
-        textViewDistance.setText(track.distance.toString())
-        textViewDuration.setText(track.duration.toString())
-//        selectedTrack = track
-//        enableMyLocation(selectedTrack!!)
+        textViewDistance.text = track.distance.toString()
+        textViewDuration.text = track.duration.toString()
     }
 
     @SuppressLint("MissingPermission")
@@ -101,7 +95,8 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
         }
         val bounds = builder.build()
         mMap.moveCamera(
-            CameraUpdateFactory.newLatLngBounds(bounds, 100))
+            CameraUpdateFactory.newLatLngBounds(bounds, 100)
+        )
 
         mMap.addMarker(
             MarkerOptions()
@@ -158,15 +153,11 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
             ),
             LOCATION_PERMISSION_REQUEST_CODE
         )
-
-
-        // [END maps_check_location_permission]
     }
 
     override fun onMyLocationButtonClick(): Boolean {
         return false
     }
-
 
 
 }

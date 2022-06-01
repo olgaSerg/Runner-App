@@ -15,7 +15,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     private var password: TextInputLayout? = null
     private var buttonLogin: Button? = null
     private var buttonRegistration: Button? = null
-    private var buttonRegistrationClickListener : OnButtonRegistrationClickListener? = null
+    private var buttonRegistrationClickListener: OnButtonRegistrationClickListener? = null
     private var buttonLoginClickListener: OnButtonLoginClickListener? = null
 
     interface OnButtonRegistrationClickListener {
@@ -49,10 +49,19 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         buttonLogin = view.findViewById(R.id.button_login_screen)
         buttonRegistration = view.findViewById(R.id.button_registration_login_screen)
 
+        val buttonRegistration = buttonRegistration ?: return
+
+        setButtonLoginClickListener()
+
+        buttonRegistration.setOnClickListener {
+            buttonRegistrationClickListener?.onClickButtonRegistrationReference()
+        }
+    }
+
+    private fun setButtonLoginClickListener() {
         val email = email ?: return
         val password = password ?: return
         val buttonLogin = buttonLogin ?: return
-        val buttonRegistration = buttonRegistration ?: return
 
         buttonLogin.setOnClickListener {
             val profile = ProfileLoginModel()
@@ -67,11 +76,6 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 password.editText?.error = getString(R.string.error_empty_field)
             }
             buttonLoginClickListener?.onClickButtonLogin()
-
-        }
-
-        buttonRegistration.setOnClickListener {
-            buttonRegistrationClickListener?.onClickButtonRegistrationReference()
         }
     }
 

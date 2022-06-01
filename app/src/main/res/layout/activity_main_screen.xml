@@ -41,54 +41,34 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        app:itemBackground="@drawable/nav_item_background"
-        >
+        app:headerLayout="@layout/nav_header"
+        android:fitsSystemWindows="true"
+        app:menu="@menu/menu_nav_drawer">
 
         <LinearLayout
+            android:id="@+id/item_view_logout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:padding="16dp"
+            android:orientation="horizontal">
 
             <ImageView
-                android:id="@+id/imageView"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="3"
-                android:background="#AADA73" />
+                android:id="@+id/image_view_logout"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/ic_logout_24"
+                tools:ignore="NestedWeights" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="7"
-                />
-
-            <LinearLayout
-                android:id="@+id/item_view_logout"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:orientation="horizontal"
-                android:layout_weight="1">
-
-                <ImageView
-                    android:id="@+id/image_view_logout"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:padding="10dp"
-                    app:srcCompat="@drawable/ic_logout_24"
-                    tools:ignore="NestedWeights" />
-
-                <TextView
-                    android:id="@+id/text_view_logout"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:padding="10dp"
-                    android:layout_weight="3"
-                    android:text="@string/logout"
-                    android:gravity="center_vertical"
-                    android:textSize="18sp" />
-            </LinearLayout>
+            <TextView
+                android:id="@+id/text_view_logout"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="5"
+                android:text="@string/logout"
+                android:gravity="center_vertical"
+                android:textSize="18sp" />
         </LinearLayout>
     </com.google.android.material.navigation.NavigationView>
 

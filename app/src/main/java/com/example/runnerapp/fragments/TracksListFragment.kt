@@ -69,7 +69,8 @@ class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
         tracksProvider.getTracksAsync(db).onSuccess({
             val tracks = it.result
             tracksRecyclerView.layoutManager = LinearLayoutManager(activity)
-            tracksRecyclerView.adapter = TracksListAdapter(tracks, recyclerViewTrackItemClickListener!!)
+            tracksRecyclerView.adapter =
+                TracksListAdapter(tracks, recyclerViewTrackItemClickListener!!)
         }, Task.UI_THREAD_EXECUTOR)
     }
 }
