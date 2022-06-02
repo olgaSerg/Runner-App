@@ -2,12 +2,18 @@ package com.example.runnerapp.fragments
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
+import androidx.constraintlayout.widget.Constraints.TAG
 import com.example.runnerapp.R
 import com.example.runnerapp.models.ProfileRegistrationModel
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
@@ -19,9 +25,15 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
     private var buttonRegistration: Button? = null
     private var buttonLogin: Button? = null
     private var buttonLoginClickListener: OnButtonLoginClickListener? = null
+    private lateinit var auth: FirebaseAuth
+    private var signUpClickListener: OnSignUpClickListener? = null
 
     interface OnButtonLoginClickListener {
         fun onClickButtonLoginReference()
+    }
+
+    interface OnSignUpClickListener {
+        fun onSignUpClickListener()
     }
 
     override fun onAttach(context: Context) {
@@ -30,6 +42,12 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
             activity as OnButtonLoginClickListener
         } catch (e: ClassCastException) {
             throw ClassCastException("$activity must implement OnButtonLoginClickListener")
+        }
+
+        signUpClickListener = try {
+            activity as OnSignUpClickListener
+        } catch (e: ClassCastException) {
+            throw ClassCastException("$activity must implement OnSignUpClickListener")
         }
     }
 
@@ -74,6 +92,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
             val isFormValid = validationResults.all { it }
 
             if (isFormValid) {
+                createUser()
+                signUpClickListener?.onSignUpClickListener()
                 fillProfile(email, firstName, lastName, password)
             }
         }
@@ -83,23 +103,49 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         password: TextInputLayout,
         passwordConfirmation: TextInputLayout
     ): Boolean {
-        if (password.editText.toString() != passwordConfirmation.editText.toString()) {
-            password.error = "Пароли не совпадают"
-            passwordConfirmation.error = "Пароли не совпадают"
+        if (password.editText?.text.toString() != passwordConfirmation.editText?.text.toString()) {
+            setPasswordError(password, passwordConfirmation)
             return false
         }
         return true
     }
 
+    private fun setPasswordError(password: TextInputLayout, passwordConfirmation: TextInputLayout) {
+        password.error = "Пароли не совпадают"
+        passwordConfirmation.error = "Пароли не совпадают"
+    }
+
     private fun checkFields(list: List<TextInputLayout>): Boolean {
         var allFilled = true
-        for (each in list) {
-            if (each.editText?.text?.isEmpty() == true) {
-                each.error = "Заполните пустое поле"
+        for (field in list) {
+            if (field.editText?.text?.isEmpty() == true) {
+                setFieldError(field)
                 allFilled = false
             }
         }
         return allFilled
+    }
+
+    private fun setFieldError(field: TextInputLayout) {
+        field.error = "Заполните пустое поле"
+    }
+
+    private fun createUser() {
+        auth = Firebase.auth
+
+        auth.createUserWithEmailAndPassword(
+            email?.editText?.text.toString(),
+            password?.editText?.text.toString()
+        )
+            .addOnCompleteListener(requireActivity()) { task ->
+                if (task.isSuccessful) {
+                    Log.d(TAG, "createUserWithEmail:success")
+                } else {
+                    Log.w(TAG, "createUserWithEmail:failure", task.exception)
+                    Toast.makeText(requireContext(), "Authentication failed.",
+                        Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 
     private fun fillProfile(

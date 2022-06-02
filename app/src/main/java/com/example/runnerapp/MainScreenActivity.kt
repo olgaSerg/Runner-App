@@ -15,6 +15,8 @@ import com.example.runnerapp.models.NavigationDrawerItem
 import com.example.runnerapp.models.TrackModel
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.navigation.NavigationView
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickListener,
     TracksListFragment.OnTracksRecyclerViewItemClickListener {
@@ -48,7 +50,11 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
 
         itemLogout.setOnClickListener {
             itemLogout.setBackgroundColor(getColor(R.color.track_color))
-            finish()
+
+            Firebase.auth.signOut()
+
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
         }
 
         setNavigationListener(drawerLayout, itemsNavigation)

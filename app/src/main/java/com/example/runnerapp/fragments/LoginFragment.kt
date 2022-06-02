@@ -1,13 +1,19 @@
 package com.example.runnerapp.fragments
 
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
 import com.example.runnerapp.R
 import com.example.runnerapp.models.ProfileLoginModel
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 class LoginFragment : Fragment(R.layout.fragment_login) {
 
@@ -17,6 +23,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     private var buttonRegistration: Button? = null
     private var buttonRegistrationClickListener: OnButtonRegistrationClickListener? = null
     private var buttonLoginClickListener: OnButtonLoginClickListener? = null
+    private lateinit var auth: FirebaseAuth
 
     interface OnButtonRegistrationClickListener {
         fun onClickButtonRegistrationReference()
@@ -51,6 +58,8 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         val buttonRegistration = buttonRegistration ?: return
 
+        auth = Firebase.auth
+
         setButtonLoginClickListener()
 
         buttonRegistration.setOnClickListener {
@@ -75,7 +84,25 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             if (findEmptyField(profile.password)) {
                 password.editText?.error = getString(R.string.error_empty_field)
             }
-            buttonLoginClickListener?.onClickButtonLogin()
+
+            auth.signInWithEmailAndPassword(
+                email.editText?.text.toString(),
+                password.editText?.text.toString()
+            )
+                .addOnCompleteListener(requireActivity()) { task ->
+                    if (task.isSuccessful) {
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d(TAG, "signInWithEmail:success")
+                        buttonLoginClickListener?.onClickButtonLogin()
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w(TAG, "signInWithEmail:failure", task.exception)
+                        Toast.makeText(
+                            requireContext(), "Authentication failed.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
         }
     }
 
