@@ -9,7 +9,7 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.constraintlayout.widget.Constraints.TAG
 import com.example.runnerapp.R
-import com.example.runnerapp.models.ProfileRegistrationModel
+import com.example.runnerapp.models.ProfileModel
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -92,9 +92,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
             val isFormValid = validationResults.all { it }
 
             if (isFormValid) {
-                createUser()
+                createUser(email, firstName, lastName)
                 signUpClickListener?.onSignUpClickListener()
-                fillProfile(email, firstName, lastName, password)
             }
         }
     }
@@ -130,15 +129,17 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         field.error = "Заполните пустое поле"
     }
 
-    private fun createUser() {
+    private fun createUser(email: TextInputLayout, firstName: TextInputLayout, lastName: TextInputLayout) {
         auth = Firebase.auth
 
         auth.createUserWithEmailAndPassword(
-            email?.editText?.text.toString(),
+            email.editText?.text.toString(),
             password?.editText?.text.toString()
         )
             .addOnCompleteListener(requireActivity()) { task ->
                 if (task.isSuccessful) {
+                    val uid = auth.uid
+                    fillProfile(email, firstName, lastName, uid!!)
                     Log.d(TAG, "createUserWithEmail:success")
                 } else {
                     Log.w(TAG, "createUserWithEmail:failure", task.exception)
@@ -152,12 +153,12 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         email: TextInputLayout,
         firstName: TextInputLayout,
         lastName: TextInputLayout,
-        password: TextInputLayout
+        uid: String
     ) {
-        val profileRegistrationModel = ProfileRegistrationModel()
-        profileRegistrationModel.email = email.editText?.text.toString()
-        profileRegistrationModel.firstName = firstName.editText?.text.toString()
-        profileRegistrationModel.lastName = lastName.editText?.text.toString()
-        profileRegistrationModel.password = password.editText?.text.toString()
+        val profileModel = ProfileModel()
+        profileModel.email = email.editText?.text.toString()
+        profileModel.firstName = firstName.editText?.text.toString()
+        profileModel.lastName = lastName.editText?.text.toString()
+        profileModel.uid = uid
     }
 }

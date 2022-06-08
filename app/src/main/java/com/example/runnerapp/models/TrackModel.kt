@@ -6,6 +6,7 @@ import java.util.Date
 
 class TrackModel(
     var id: Int? = null,
+    var firebaseKey: String? = null,
     var startTime: Date? = null,
     var routeList: ArrayList<LatLng>? = null,
     var distance: Int? = null,

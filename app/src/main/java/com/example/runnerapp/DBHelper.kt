@@ -12,6 +12,7 @@ const val START_TIME = "start_time"
 const val DISTANCE = "distance"
 const val RUNNING_TIME = "running_time"
 const val ROUTE = "route"
+const val FIREBASE_KEY = "firebase_key"
 
 class DBHelper(context: Context) :
     SQLiteOpenHelper(context, "TracksDB", null, DB_VERSION) {
@@ -43,15 +44,9 @@ class DBHelper(context: Context) :
                 $START_TIME STRING,
                 $DISTANCE INTEGER,
                 $RUNNING_TIME LONG,
-                $ROUTE JSONArray
+                $ROUTE JSONArray,
+                $FIREBASE_KEY STRING
             );
-            """
-                )
-                db.execSQL(
-                    """
-            INSERT INTO "track" ("start_time", "distance", "running_time") 
-            VALUES ('13.05.2022 08:13:56', 1523, 683),
-                   ('15.05.2022 11:07:35', 2198, 919)
             """
                 )
             }

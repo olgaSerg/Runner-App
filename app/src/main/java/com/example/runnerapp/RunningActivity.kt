@@ -14,7 +14,9 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isInvisible
+import bolts.Task
 import com.example.runnerapp.models.TrackModel
+import com.example.runnerapp.providers.GetTracksProvider
 import com.example.runnerapp.providers.RecordTrackProvider
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationCallback
@@ -22,7 +24,12 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import java.util.Date
+import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 
 const val UPDATE_INTERVAL = (10 * 1000).toLong()
@@ -41,6 +48,7 @@ class RunningActivity : AppCompatActivity() {
     private var totalDistance = 0.0
     private var mLocationRequest: LocationRequest? = null
     private var mFusedLocationClient: FusedLocationProviderClient? = null
+    private lateinit var database: DatabaseReference
 
     private var mLocationCallback: LocationCallback = object : LocationCallback() {
 
@@ -89,6 +97,8 @@ class RunningActivity : AppCompatActivity() {
         setButtonStartListener(buttonFinish)
         setButtonFinishListener(buttonFinish, db)
 
+        loadTracksToLocalDbFromFirebase(db)
+
         serviceIntent = Intent(applicationContext, TimerService::class.java)
         registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
     }
@@ -132,8 +142,32 @@ class RunningActivity : AppCompatActivity() {
             track.startTime = startTime
             track.routeList = routeList
             track.distance = totalDistance.toInt()
+
             val recordTrackProvider = RecordTrackProvider()
             recordTrackProvider.recordTrackExecute(db, track)
+                .onSuccess {
+                    writeTracksToFirebase(db)
+                }
+            loadTracksToLocalDbFromFirebase(db)
+        }
+    }
+    private fun loadTracksToLocalDbFromFirebase(db: SQLiteDatabase) {
+        var keysListFirebase = ArrayList<String>()
+        val getTracksProvider = GetTracksProvider()
+        val recordTrackProvider = RecordTrackProvider()
+        var newTracksList = ArrayList<TrackModel>()
+
+        getTracksProvider.getTracksKeysFromFirebase { keysList ->
+            keysListFirebase = keysList
+            getTracksProvider.getFirebaseKeyFromDbAsync(db).onSuccess({
+                getNewTracksKeysFromFirebase(keysListFirebase, it.result)
+            }, Task.BACKGROUND_EXECUTOR)
+                .onSuccess {
+                    getTracksProvider.getNewTracksList(it.result) { tracksList ->
+                        newTracksList = tracksList
+                        recordTrackProvider.recordNewTracksFromFirebase(db, newTracksList)
+                    }
+                }
         }
     }
 
@@ -173,6 +207,67 @@ class RunningActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    private fun writeTracksToFirebase(db: SQLiteDatabase) {
+        val getTracksProvider = GetTracksProvider()
+        var tracks: ArrayList<TrackModel>? = null
+        val uid = Firebase.auth.uid ?: return
+        database = Firebase.database.reference
+        val recordTrackProvider = RecordTrackProvider()
+
+        getTracksProvider.getTracksAsync(db).onSuccess { tracks = it.result }.onSuccess {
+            if (tracks != null) {
+                for (track in tracks!!) {
+                    if (track.firebaseKey == null) {
+                        track.routeList = arrayListOf(
+                            LatLng(50.34, 23.43),
+                            LatLng(50.87, 23.67),
+                            LatLng(51.00, 23.20)
+                        )
+                        val key = database.child("track").push().key
+                        val firebaseTrack = TrackModel(
+                            null,
+                            null,
+                            track.startTime,
+                            track.routeList,
+                            track.distance,
+                            track.duration
+                        )
+                        val childUpdates = mutableMapOf<String, Any>(
+                            "/$uid/tracks/$key/" to firebaseTrack
+                        )
+                        database.updateChildren(childUpdates)
+                        track.firebaseKey = key
+                        if (key != null && track.id != null) {
+                            recordTrackProvider.recordFirebaseKeyAsync(db, key, track.id!!)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getNewTracksKeysFromFirebase(
+        keysListFirebase: ArrayList<String>,
+        keysListLocalDb: ArrayList<String>
+    ): ArrayList<String> {
+        var isSynchronized = false
+        val newKeysList = ArrayList<String>()
+        for (firebaseKey in keysListFirebase) {
+            for (localKey in keysListLocalDb) {
+                if (firebaseKey == localKey) {
+                    isSynchronized = true
+                    break
+                }
+            }
+            if (!isSynchronized) {
+                newKeysList.add(firebaseKey)
+            } else {
+                isSynchronized = false
+            }
+        }
+        return newKeysList
     }
 }
 
