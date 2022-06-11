@@ -10,6 +10,7 @@ import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -151,6 +152,7 @@ class RunningActivity : AppCompatActivity() {
             loadTracksToLocalDbFromFirebase(db)
         }
     }
+
     private fun loadTracksToLocalDbFromFirebase(db: SQLiteDatabase) {
         var keysListFirebase = ArrayList<String>()
         val getTracksProvider = GetTracksProvider()

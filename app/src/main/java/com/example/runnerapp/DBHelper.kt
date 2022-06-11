@@ -6,13 +6,16 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 
 const val DB_VERSION = 1
-const val TABLE_NAME = "track"
+const val TRACKS_TABLE_NAME = "track"
+const val NOTIFICATIONS_TABLE_NAME = "notification"
 const val ID = "id"
 const val START_TIME = "start_time"
 const val DISTANCE = "distance"
 const val RUNNING_TIME = "running_time"
 const val ROUTE = "route"
 const val FIREBASE_KEY = "firebase_key"
+const val DATE_TIME = "date_time"
+const val UID = "uid"
 
 class DBHelper(context: Context) :
     SQLiteOpenHelper(context, "TracksDB", null, DB_VERSION) {
@@ -39,13 +42,22 @@ class DBHelper(context: Context) :
             1 -> {
                 db.execSQL(
                     """
-            CREATE TABLE $TABLE_NAME (
+            CREATE TABLE $TRACKS_TABLE_NAME (
                 $ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $START_TIME STRING,
                 $DISTANCE INTEGER,
                 $RUNNING_TIME LONG,
                 $ROUTE JSONArray,
                 $FIREBASE_KEY STRING
+            );
+            """
+                )
+                db.execSQL(
+                    """
+            CREATE TABLE $NOTIFICATIONS_TABLE_NAME (
+                $ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $DATE_TIME STRING,
+                $UID STRING
             );
             """
                 )

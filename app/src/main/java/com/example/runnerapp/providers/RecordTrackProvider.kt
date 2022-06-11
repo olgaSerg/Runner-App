@@ -14,12 +14,12 @@ class RecordTrackProvider {
 
     fun recordTrackExecute(db: SQLiteDatabase, track: TrackModel): Task<TrackModel> {
         val date = formatDate(track.startTime!!)
-        track.routeList = arrayListOf(
-            LatLng(50.34, 23.43),
-            LatLng(50.87, 23.67),
-            LatLng(51.00, 23.20)
-        )
-        track.distance = 20
+//        track.routeList = arrayListOf(
+//            LatLng(50.34, 23.43),
+//            LatLng(50.87, 23.67),
+//            LatLng(51.00, 23.20)
+//        )
+//        track.distance = 20
         val route = Gson().toJsonTree(track.routeList).asJsonArray
         val args = arrayOf(date, track.distance, track.duration, route)
 

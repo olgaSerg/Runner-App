@@ -23,4 +23,12 @@
     <string name="ann_new_track">Новый трек</string>
     <string name="start_date">Дата старта</string>
     <string name="track_distance">Дистанция(км)</string>
+    <string name="save_changes">Сохранить изменения</string>
+    <string name="notification_delete">Напоминание удалено</string>
+    <string name="ok">OK</string>
+    <string name="set_notification">Напоминание установлено на:</string>
+    <string name="notification">Напоминание</string>
+    <string name="message_start_run">Пора на пробежку!</string>
+    <string name="add_notification">Добавить напоминание</string>
+    <string name="delete_notification">Удалить напоминание</string>
 </resources>

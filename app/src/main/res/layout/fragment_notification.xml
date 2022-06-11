@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <DatePicker
+        android:id="@+id/date_picker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="-30dp"
+        android:layout_marginRight="-30dp"
+        android:calendarViewShown="false"
+        android:datePickerMode="spinner"
+        android:scaleX="0.7"
+        android:scaleY="0.7"
+        app:layout_constraintEnd_toStartOf="@id/time_picker"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TimePicker
+        android:id="@+id/time_picker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="-30dp"
+        android:layout_marginRight="-30dp"
+        android:scaleX="0.7"
+        android:scaleY="0.7"
+        android:timePickerMode="spinner"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/date_picker"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <Button
+        android:id="@+id/button_add_notification"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:text="@string/add_notification"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toTopOf="@id/button_save_changes"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/date_picker" />
+
+    <Button
+        android:id="@+id/button_save_changes"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/save_changes"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toEndOf="@id/button_add_notification"
+        app:layout_constraintStart_toStartOf="@id/button_add_notification"
+        app:layout_constraintTop_toBottomOf="@id/button_add_notification"
+        />
+
+    <Button
+        android:id="@+id/button_delete_notification"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/delete_notification"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toEndOf="@id/button_add_notification"
+        app:layout_constraintStart_toStartOf="@id/button_add_notification"
+        app:layout_constraintTop_toBottomOf="@id/button_save_changes" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
