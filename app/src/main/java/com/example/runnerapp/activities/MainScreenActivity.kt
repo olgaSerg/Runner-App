@@ -116,7 +116,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
 
     private fun loadTracksListFragment() {
         supportFragmentManager.beginTransaction().apply {
-            setCustomAnimations(R.anim.enter_right_to_left, R.anim.exit_right_to_left)
+//            setCustomAnimations(R.anim.enter_right_to_left, R.anim.exit_right_to_left)
             replace(R.id.fragment_container, TracksListFragment())
             commit()
         }

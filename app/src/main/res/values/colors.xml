@@ -10,4 +10,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="color_unchecked_item">#FFFFFFFF</color>
     <color name="color_checked_item">#8BC34A</color>
+    <color name="main_color">#A1178897</color>
 </resources>
