@@ -10,12 +10,10 @@ import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isInvisible
-import bolts.Task
 import com.example.runnerapp.models.TrackModel
 import com.example.runnerapp.providers.GetTracksProvider
 import com.example.runnerapp.providers.RecordTrackProvider
@@ -98,8 +96,6 @@ class RunningActivity : AppCompatActivity() {
         setButtonStartListener(buttonFinish)
         setButtonFinishListener(buttonFinish, db)
 
-        loadTracksToLocalDbFromFirebase(db)
-
         serviceIntent = Intent(applicationContext, TimerService::class.java)
         registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
     }
@@ -148,27 +144,6 @@ class RunningActivity : AppCompatActivity() {
             recordTrackProvider.recordTrackExecute(db, track)
                 .onSuccess {
                     writeTracksToFirebase(db)
-                }
-            loadTracksToLocalDbFromFirebase(db)
-        }
-    }
-
-    private fun loadTracksToLocalDbFromFirebase(db: SQLiteDatabase) {
-        var keysListFirebase = ArrayList<String>()
-        val getTracksProvider = GetTracksProvider()
-        val recordTrackProvider = RecordTrackProvider()
-        var newTracksList = ArrayList<TrackModel>()
-
-        getTracksProvider.getTracksKeysFromFirebase { keysList ->
-            keysListFirebase = keysList
-            getTracksProvider.getFirebaseKeyFromDbAsync(db).onSuccess({
-                getNewTracksKeysFromFirebase(keysListFirebase, it.result)
-            }, Task.BACKGROUND_EXECUTOR)
-                .onSuccess {
-                    getTracksProvider.getNewTracksList(it.result) { tracksList ->
-                        newTracksList = tracksList
-                        recordTrackProvider.recordNewTracksFromFirebase(db, newTracksList)
-                    }
                 }
         }
     }
@@ -248,28 +223,6 @@ class RunningActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    private fun getNewTracksKeysFromFirebase(
-        keysListFirebase: ArrayList<String>,
-        keysListLocalDb: ArrayList<String>
-    ): ArrayList<String> {
-        var isSynchronized = false
-        val newKeysList = ArrayList<String>()
-        for (firebaseKey in keysListFirebase) {
-            for (localKey in keysListLocalDb) {
-                if (firebaseKey == localKey) {
-                    isSynchronized = true
-                    break
-                }
-            }
-            if (!isSynchronized) {
-                newKeysList.add(firebaseKey)
-            } else {
-                isSynchronized = false
-            }
-        }
-        return newKeysList
     }
 }
 

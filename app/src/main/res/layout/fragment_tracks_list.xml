@@ -7,12 +7,19 @@
     android:layout_height="match_parent"
     tools:context=".fragments.TracksListFragment">
 
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="70dp">
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_tracks"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
     </androidx.recyclerview.widget.RecyclerView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/floating_action_button"
@@ -23,6 +30,5 @@
         app:srcCompat="@drawable/ic_add_24"
         app:layout_behavior="com.example.runnerapp.FabBehaviour"
         android:contentDescription="@string/ann_new_track" />
-
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

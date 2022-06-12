@@ -19,12 +19,14 @@ import java.util.Locale
 import kotlin.collections.HashMap
 
 class GetTracksProvider {
+    private val uid = Firebase.auth.uid
 
     fun getTracksAsync(db: SQLiteDatabase): Task<ArrayList<TrackModel>> {
         return Task.callInBackground {
+            val args = arrayOf(uid)
             val cursor = db.rawQuery(
-                """SELECT id, start_time, distance, running_time, firebase_key FROM track ORDER BY start_time DESC""",
-                null
+                """SELECT id, start_time, distance, running_time, firebase_key FROM track WHERE uid = ? ORDER BY start_time DESC""",
+                args
             )
             val tracks = arrayListOf<TrackModel>()
             with(cursor) {
@@ -46,14 +48,12 @@ class GetTracksProvider {
     }
 
     fun getSelectedTrackAsync(db: SQLiteDatabase, id: Int) : Task<TrackModel> {
-        val args = id.toString()
+        val args = arrayOf(id.toString(), uid)
         return Task.callInBackground {
 
             val cursor = db.rawQuery(
-                """SELECT distance, running_time, route FROM track WHERE id == ?""",
-                arrayOf(
+                """SELECT distance, running_time, route FROM track WHERE id == ? AND uid = ?""",
                     args
-                )
             )
             val track = TrackModel()
             with(cursor) {
@@ -112,17 +112,20 @@ class GetTracksProvider {
         }
     }
 
-    fun getNewTracksList(keysList: ArrayList<String>, callback: (ArrayList<TrackModel>) -> Unit): ArrayList<TrackModel> {
+    fun getNewTracksList(
+        keysList: ArrayList<String>,
+        callback: (ArrayList<TrackModel>) -> Unit
+    ): ArrayList<TrackModel> {
         val database = Firebase.database.reference
         val tracksList = arrayListOf<TrackModel>()
         val uid = Firebase.auth.uid ?: return tracksList
         database.child(uid).child("tracks").get().addOnSuccessListener {
-            val dataSnapshot = it.children
+            val dataSnapshot = it.value as HashMap<String, Any>
             for (key in keysList) {
                 for (shot in dataSnapshot) {
                     if (shot.key == key) {
                         val track = TrackModel()
-                        val hashMap = shot.value as HashMap<String, Any>
+                        val hashMap = dataSnapshot.getValue(shot.key) as HashMap<String, Any>
                         track.duration = hashMap.getValue("duration") as Long
                         val distance = hashMap.getValue("distance") as Long
                         track.distance = distance.toInt()
@@ -136,8 +139,7 @@ class GetTracksProvider {
                 }
             }
             callback(tracksList)
-            Log.i("firebase", "Got value ${it.value}")
-        }.addOnFailureListener{
+        }.addOnFailureListener {
             Log.e("firebase", "Error getting data", it)
         }
         return tracksList
