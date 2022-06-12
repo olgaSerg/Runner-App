@@ -1,8 +1,9 @@
-package com.example.runnerapp
+package com.example.runnerapp.activities
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.example.runnerapp.R
 import com.example.runnerapp.fragments.LoginFragment
 import com.example.runnerapp.fragments.RegistrationFragment
 import com.google.firebase.auth.FirebaseAuth

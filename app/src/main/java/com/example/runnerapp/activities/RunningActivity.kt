@@ -1,4 +1,4 @@
-package com.example.runnerapp
+package com.example.runnerapp.activities
 
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
@@ -14,6 +14,9 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isInvisible
+import com.example.runnerapp.App
+import com.example.runnerapp.R
+import com.example.runnerapp.TimerService
 import com.example.runnerapp.models.TrackModel
 import com.example.runnerapp.providers.GetTracksProvider
 import com.example.runnerapp.providers.RecordTrackProvider

@@ -1,17 +1,12 @@
 package com.example.runnerapp.fragments
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.TextView
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import bolts.Task
 import com.example.runnerapp.App
-import com.example.runnerapp.PermissionUtils
 import com.example.runnerapp.R
 import com.example.runnerapp.models.TrackModel
 import com.example.runnerapp.providers.GetTracksProvider
@@ -23,7 +18,6 @@ import com.google.android.gms.maps.model.*
 import com.google.android.gms.maps.model.LatLngBounds
 
 const val TRACK_ID = "track_id"
-const val LOCATION_PERMISSION_REQUEST_CODE = 1
 
 class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     GoogleMap.OnMyLocationButtonClickListener,
@@ -115,49 +109,11 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
 
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
-
-        // 1. Check if permissions are granted, if so, enable the my location layer
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            mMap.isMyLocationEnabled = true
-            return
-        }
-
-        // 2. If if a permission rationale dialog should be shown
-        if (ActivityCompat.shouldShowRequestPermissionRationale(
-                requireActivity(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) || ActivityCompat.shouldShowRequestPermissionRationale(
-                requireActivity(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        ) {
-            PermissionUtils.RationaleDialog.newInstance(
-                LOCATION_PERMISSION_REQUEST_CODE, true
-            ).show(requireActivity().supportFragmentManager, "dialog")
-            return
-        }
-
-        // 3. Otherwise, request permission
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ),
-            LOCATION_PERMISSION_REQUEST_CODE
-        )
+        mMap.isMyLocationEnabled = true
     }
+
 
     override fun onMyLocationButtonClick(): Boolean {
         return false
     }
-
-
 }

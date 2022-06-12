@@ -7,6 +7,7 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.example.runnerapp.activities.RunningActivity
 import com.example.runnerapp.fragments.CHANNEL_ID
 import com.example.runnerapp.fragments.NOTIFICATION_ID
 

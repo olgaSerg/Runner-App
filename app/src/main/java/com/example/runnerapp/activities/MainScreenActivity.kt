@@ -1,19 +1,25 @@
-package com.example.runnerapp
+package com.example.runnerapp.activities
 
-import android.app.PendingIntent
-import android.app.AlarmManager
-import android.app.NotificationManager
-import android.app.NotificationChannel
+import android.Manifest
+import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings
 import android.view.Gravity
 import android.view.MenuItem
 import android.widget.LinearLayout
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import com.example.runnerapp.Notification
+import com.example.runnerapp.R
 import com.example.runnerapp.fragments.*
 import com.example.runnerapp.models.NavigationDrawerItem
 import com.example.runnerapp.models.NotificationModel
@@ -34,35 +40,71 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     private var drawerLayout: DrawerLayout? = null
     private var navigationView: NavigationView? = null
     private var itemLogout: LinearLayout? = null
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                loadTracksListFragment()
+            } else {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    askUserOpeningAppSettings()
+                }
+                else {
+                    askUserOpeningAppSettings()
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main_screen)
         createNotificationChannel()
 
+        showFragmentPreview()
+
         initializeFields()
-        loadTracksListFragment()
 
         val toolbar = toolbar ?: return
         val drawerLayout = drawerLayout ?: return
 
         val itemsNavigation = createItemsNavigationArray()
 
-        val dbHelper = DBHelper(this)
-        dbHelper.readableDatabase
-
         toolbar.setNavigationOnClickListener {
             drawerLayout.openDrawer(Gravity.LEFT)
         }
 
         sendClickPosition(itemsNavigation[0])
-
         setItemLogoutClickListener()
-
-
-
         setNavigationListener(drawerLayout, itemsNavigation)
+    }
 
+    private fun showFragmentPreview() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED) {
+            loadTracksListFragment()
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    private fun askUserOpeningAppSettings() {
+        val settingIntent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", packageName, null)
+        )
+        if (packageManager?.resolveActivity(settingIntent, PackageManager.MATCH_DEFAULT_ONLY) == null) {
+            Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
+        } else {
+            AlertDialog.Builder(this)
+                .setMessage(getString(R.string.request_permission))
+                .setPositiveButton(getString(R.string.open_settings)) { _, _ ->
+                    startActivity(settingIntent)
+                }
+                .setCancelable(false)
+                .create()
+                .show()
+        }
     }
 
     private fun initializeFields() {
@@ -218,5 +260,10 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
             replace(R.id.fragment_container, NotificationsListFragment())
             commit()
         }
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        showFragmentPreview()
     }
 }
