@@ -13,7 +13,6 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.MenuItem
 import android.widget.LinearLayout
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
@@ -28,6 +27,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import android.location.LocationManager
 
 class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickListener,
     TracksListFragment.OnTracksRecyclerViewItemClickListener,
@@ -40,6 +40,8 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     private var drawerLayout: DrawerLayout? = null
     private var navigationView: NavigationView? = null
     private var itemLogout: LinearLayout? = null
+    private var locationManager: LocationManager? = null
+    private var geolocationEnabled = false
     private val requestPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
@@ -80,11 +82,12 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     }
 
     private fun showFragmentPreview() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED) {
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED) && checkLocationServiceEnabled()) {
             loadTracksListFragment()
         } else {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            checkLocationServiceEnabled()
         }
     }
 
@@ -93,18 +96,14 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
             Uri.fromParts("package", packageName, null)
         )
-        if (packageManager?.resolveActivity(settingIntent, PackageManager.MATCH_DEFAULT_ONLY) == null) {
-            Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
-        } else {
-            AlertDialog.Builder(this)
-                .setMessage(getString(R.string.request_permission))
-                .setPositiveButton(getString(R.string.open_settings)) { _, _ ->
-                    startActivity(settingIntent)
-                }
-                .setCancelable(false)
-                .create()
-                .show()
-        }
+        AlertDialog.Builder(this)
+            .setMessage(getString(R.string.request_permission))
+            .setPositiveButton(getString(R.string.open_settings)) { _, _ ->
+                startActivity(settingIntent)
+            }
+            .setCancelable(false)
+            .create()
+            .show()
     }
 
     private fun initializeFields() {
@@ -116,10 +115,36 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
 
     private fun loadTracksListFragment() {
         supportFragmentManager.beginTransaction().apply {
-//            setCustomAnimations(R.anim.enter_right_to_left, R.anim.exit_right_to_left)
             replace(R.id.fragment_container, TracksListFragment())
             commit()
         }
+    }
+
+    private fun checkLocationServiceEnabled(): Boolean {
+        locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        try {
+            geolocationEnabled = locationManager!!.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        if (geolocationEnabled) {
+            return true
+        } else {
+            buildAlertMessageNoLocationService()
+        }
+        return false
+    }
+
+    private fun buildAlertMessageNoLocationService(): Boolean {
+        AlertDialog.Builder(this)
+            .setMessage("Необходимо включить определение местоположения")
+            .setPositiveButton(
+                "Включить"
+            ) { dialog, id -> startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) }
+            .setCancelable(false)
+            .create()
+            .show()
+        return true
     }
 
     private fun setItemLogoutClickListener() {
@@ -265,5 +290,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     override fun onRestart() {
         super.onRestart()
         showFragmentPreview()
+        checkLocationServiceEnabled()
     }
 }
+

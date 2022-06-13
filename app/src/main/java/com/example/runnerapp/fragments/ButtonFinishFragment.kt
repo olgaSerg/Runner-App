@@ -193,29 +193,22 @@ class ButtonFinishFragment : Fragment(R.layout.fragment_button_finish) {
         getTracksProvider.getTracksAsync(db).onSuccess { tracks = it.result }.onSuccess {
             if (tracks != null) {
                 for (track in tracks!!) {
-                    if (track.firebaseKey == null) {
-                        track.routeList = arrayListOf(
-                            LatLng(50.34, 23.43),
-                            LatLng(50.87, 23.67),
-                            LatLng(51.00, 23.20)
-                        )
-                        val key = database.child("track").push().key
-                        val firebaseTrack = TrackModel(
-                            null,
-                            null,
-                            track.startTime,
-                            track.routeList,
-                            track.distance,
-                            track.duration
-                        )
-                        val childUpdates = mutableMapOf<String, Any>(
-                            "/$uid/tracks/$key/" to firebaseTrack
-                        )
-                        database.updateChildren(childUpdates)
-                        track.firebaseKey = key
-                        if (key != null && track.id != null) {
-                            recordTrackProvider.recordFirebaseKeyAsync(db, key, track.id!!)
-                        }
+                    val key = database.child("track").push().key
+                    val firebaseTrack = TrackModel(
+                        null,
+                        null,
+                        track.startTime,
+                        track.routeList,
+                        track.distance,
+                        track.duration
+                    )
+                    val childUpdates = mutableMapOf<String, Any>(
+                        "/$uid/tracks/$key/" to firebaseTrack
+                    )
+                    database.updateChildren(childUpdates)
+                    track.firebaseKey = key
+                    if (key != null && track.id != null) {
+                        recordTrackProvider.recordFirebaseKeyAsync(db, key, track.id!!)
                     }
                 }
             }
