@@ -30,4 +30,6 @@
     <string name="add_notification">Добавить напоминание</string>
     <string name="delete_notification">Удалить напоминание</string>
     <string name="open_settings">Настройки</string>
+    <string name="finish">Финиш</string>
+    <string name="start">Старт</string>
 </resources>

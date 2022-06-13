@@ -17,6 +17,9 @@ import androidx.core.view.isInvisible
 import com.example.runnerapp.App
 import com.example.runnerapp.R
 import com.example.runnerapp.TimerService
+import com.example.runnerapp.fragments.ButtonFinishFragment
+import com.example.runnerapp.fragments.ButtonStartFragment
+import com.example.runnerapp.fragments.ResultScreenFragment
 import com.example.runnerapp.models.TrackModel
 import com.example.runnerapp.providers.GetTracksProvider
 import com.example.runnerapp.providers.RecordTrackProvider
@@ -37,7 +40,7 @@ import kotlin.math.roundToInt
 const val UPDATE_INTERVAL = (10 * 1000).toLong()
 const val FASTEST_INTERVAL: Long = 2000
 
-class RunningActivity : AppCompatActivity() {
+class RunningActivity : AppCompatActivity(), ButtonStartFragment.OnButtonStartClick, ButtonFinishFragment.OnButtonFinishClick {
 
     private var textViewTimer: TextView? = null
     private var buttonStart: Button? = null
@@ -51,6 +54,7 @@ class RunningActivity : AppCompatActivity() {
     private var mLocationRequest: LocationRequest? = null
     private var mFusedLocationClient: FusedLocationProviderClient? = null
     private lateinit var database: DatabaseReference
+    private var containerNumber = 1
 
     private var mLocationCallback: LocationCallback = object : LocationCallback() {
 
@@ -84,149 +88,185 @@ class RunningActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_running)
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .add(R.id.fragment_container, ButtonStartFragment())
+                .commit()
+        }
 
-        textViewTimer = findViewById(R.id.text_view_timer)
-        buttonStart = findViewById(R.id.button_start)
-        buttonFinish = findViewById(R.id.button_finish)
 
-        val buttonFinish = buttonFinish ?: return
-        val db = App.instance?.dBHelper?.writableDatabase ?: return
-
-        setButtonStartListener(buttonFinish)
-        setButtonFinishListener(buttonFinish, db)
-
-        serviceIntent = Intent(applicationContext, TimerService::class.java)
-        registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
     }
 
-    @SuppressLint("MissingPermission")
-    private fun setButtonStartListener(buttonFinish: Button) {
-        val buttonStart = buttonStart ?: return
-        buttonStart.setOnClickListener {
-            buttonStart.isInvisible = true
-            buttonFinish.isInvisible = false
-            startTime = Date()
-            mLocationRequest = LocationRequest.create()
-            if (mLocationRequest != null) {
-                mLocationRequest!!.interval = UPDATE_INTERVAL
-                mLocationRequest!!.fastestInterval = FASTEST_INTERVAL
-                mLocationRequest!!.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-                mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-                mFusedLocationClient?.requestLocationUpdates(
-                    mLocationRequest!!,
-                    mLocationCallback,
-                    Looper.myLooper()!!
+    private fun flipCard(time: String? = null, trackDistance: Double? = null) {
+        if (containerNumber == 1) {
+            supportFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                    R.anim.card_flip_right_in,
+                    R.anim.card_flip_right_out,
+                    R.anim.card_flip_left_in,
+                    R.anim.card_flip_left_out
                 )
-                startTimer()
-            }
-        }
-    }
-
-    private fun startTimer() {
-        serviceIntent?.putExtra(TimerService.TIME_EXTRA, time)
-        startService(serviceIntent)
-        timerStarted = true
-    }
-
-    private fun setButtonFinishListener(buttonFinish: Button, db: SQLiteDatabase) {
-        buttonFinish.setOnClickListener {
-            mFusedLocationClient?.removeLocationUpdates(mLocationCallback)
-            stopTimer()
-            buttonFinish.isInvisible = true
-            val track = TrackModel()
-            track.duration = time.toLong() / 1000
-            track.startTime = startTime
-            track.routeList = routeList
-            track.distance = totalDistance.toInt()
-
-            val recordTrackProvider = RecordTrackProvider()
-            recordTrackProvider.recordTrackExecute(db, track)
-                .onSuccess {
-                    writeTracksToFirebase(db)
-                }
-        }
-    }
-
-    private fun stopTimer() {
-        stopService(serviceIntent)
-        timerStarted = false
-    }
-
-    private val updateTime: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val textViewTimer = textViewTimer ?: return
-            val currentTime = Date()
-            if (startTime != null) {
-                time = 1.0 * (currentTime.time - startTime!!.time)
-                textViewTimer.text = getTimeStringFromDouble(time)
-            }
-        }
-    }
-
-    private fun getTimeStringFromDouble(time: Double): String {
-        val resultInt = time.roundToInt() / 1000
-        val hours = resultInt % 86400 / 3600
-        val minutes = resultInt % 86400 % 3600 / 60
-        val seconds = resultInt % 86400 % 3600 % 60
-        val millis = time.roundToInt() % 1000
-
-        return makeTimeString(hours, minutes, seconds, millis)
-    }
-
-    private fun makeTimeString(hour: Int, min: Int, sec: Int, millis: Int): String =
-        String.format("%02d:%02d:%02d.%03d", hour, min, sec, millis)
-
-    override fun onBackPressed() {
-        if (timerStarted) {
-            Toast.makeText(applicationContext, "Нажмите кнопку \"Финиш\"", Toast.LENGTH_SHORT)
-                .show()
+                .replace(R.id.fragment_container, ButtonFinishFragment())
+                .commit()
+            containerNumber++
         } else {
-            super.onBackPressed()
-        }
-    }
+            if (time != null && trackDistance != null) {
+                if (containerNumber == 2) {
+                    supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(
+                            R.anim.card_flip_right_in,
+                            R.anim.card_flip_right_out,
+                            R.anim.card_flip_left_in,
+                            R.anim.card_flip_left_out
+                        )
 
-    private fun writeTracksToFirebase(db: SQLiteDatabase) {
-        val getTracksProvider = GetTracksProvider()
-        var tracks: ArrayList<TrackModel>? = null
-        val uid = Firebase.auth.uid ?: return
-        database = Firebase.database.reference
-        val recordTrackProvider = RecordTrackProvider()
-
-        getTracksProvider.getTracksAsync(db).onSuccess { tracks = it.result }.onSuccess {
-            if (tracks != null) {
-                for (track in tracks!!) {
-                    if (track.firebaseKey == null) {
-                        track.routeList = arrayListOf(
-                            LatLng(50.34, 23.43),
-                            LatLng(50.87, 23.67),
-                            LatLng(51.00, 23.20)
+                        .replace(
+                            R.id.fragment_container,
+                            ResultScreenFragment.newInstance(time, totalDistance)
                         )
-                        val key = database.child("track").push().key
-                        val firebaseTrack = TrackModel(
-                            null,
-                            null,
-                            track.startTime,
-                            track.routeList,
-                            track.distance,
-                            track.duration
-                        )
-                        val childUpdates = mutableMapOf<String, Any>(
-                            "/$uid/tracks/$key/" to firebaseTrack
-                        )
-                        database.updateChildren(childUpdates)
-                        track.firebaseKey = key
-                        if (key != null && track.id != null) {
-                            recordTrackProvider.recordFirebaseKeyAsync(db, key, track.id!!)
-                        }
-                    }
+                        .commit()
                 }
             }
         }
     }
+
+    override fun clickButtonStart() {
+        containerNumber = 1
+        flipCard()
+    }
+
+    override fun clickFinishButton(time: String, totalDistance: Double) {
+        containerNumber = 2
+        flipCard(time, totalDistance)
+
+    }
+
+//    @SuppressLint("MissingPermission")
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        setContentView(R.layout.activity_running)
+//
+//        textViewTimer = findViewById(R.id.text_view_timer)
+//        buttonStart = findViewById(R.id.button_start)
+//        buttonFinish = findViewById(R.id.button_finish)
+//
+//        val buttonFinish = buttonFinish ?: return
+//        val db = App.instance?.dBHelper?.writableDatabase ?: return
+//
+//        setButtonStartListener(buttonFinish)
+//        setButtonFinishListener(buttonFinish, db)
+//
+//        serviceIntent = Intent(applicationContext, TimerService::class.java)
+//        registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
+//    }
+//
+//    @SuppressLint("MissingPermission")
+//    private fun setButtonStartListener(buttonFinish: Button) {
+//        val buttonStart = buttonStart ?: return
+//        buttonStart.setOnClickListener {
+//            buttonStart.isInvisible = true
+//            buttonFinish.isInvisible = false
+//            startTime = Date()
+//            mLocationRequest = LocationRequest.create()
+//            if (mLocationRequest != null) {
+//                mLocationRequest!!.interval = UPDATE_INTERVAL
+//                mLocationRequest!!.fastestInterval = FASTEST_INTERVAL
+//                mLocationRequest!!.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+//                mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+//                mFusedLocationClient?.requestLocationUpdates(
+//                    mLocationRequest!!,
+//                    mLocationCallback,
+//                    Looper.myLooper()!!
+//                )
+//                startTimer()
+//            }
+//        }
+//    }
+//
+//    private fun startTimer() {
+//        serviceIntent?.putExtra(TimerService.TIME_EXTRA, time)
+//        startService(serviceIntent)
+//        timerStarted = true
+//    }
+//
+//    private fun setButtonFinishListener(buttonFinish: Button, db: SQLiteDatabase) {
+//        buttonFinish.setOnClickListener {
+//            mFusedLocationClient?.removeLocationUpdates(mLocationCallback)
+//            stopTimer()
+//            buttonFinish.isInvisible = true
+//            val track = TrackModel()
+//            track.duration = time.toLong() / 1000
+//            track.startTime = startTime
+//            track.routeList = routeList
+//            track.distance = totalDistance.toInt()
+//
+//            val recordTrackProvider = RecordTrackProvider()
+//            recordTrackProvider.recordTrackExecute(db, track)
+//                .onSuccess {
+//                    writeTracksToFirebase(db)
+//                }
+//        }
+//    }
+//
+//    private fun stopTimer() {
+//        stopService(serviceIntent)
+//        timerStarted = false
+//    }
+//
+
+//
+
+//
+//    override fun onBackPressed() {
+//        if (timerStarted) {
+//            Toast.makeText(applicationContext, "Нажмите кнопку \"Финиш\"", Toast.LENGTH_SHORT)
+//                .show()
+//        } else {
+//            super.onBackPressed()
+//        }
+//    }
+//
+//    private fun writeTracksToFirebase(db: SQLiteDatabase) {
+//        val getTracksProvider = GetTracksProvider()
+//        var tracks: ArrayList<TrackModel>? = null
+//        val uid = Firebase.auth.uid ?: return
+//        database = Firebase.database.reference
+//        val recordTrackProvider = RecordTrackProvider()
+//
+//        getTracksProvider.getTracksAsync(db).onSuccess { tracks = it.result }.onSuccess {
+//            if (tracks != null) {
+//                for (track in tracks!!) {
+//                    if (track.firebaseKey == null) {
+//                        track.routeList = arrayListOf(
+//                            LatLng(50.34, 23.43),
+//                            LatLng(50.87, 23.67),
+//                            LatLng(51.00, 23.20)
+//                        )
+//                        val key = database.child("track").push().key
+//                        val firebaseTrack = TrackModel(
+//                            null,
+//                            null,
+//                            track.startTime,
+//                            track.routeList,
+//                            track.distance,
+//                            track.duration
+//                        )
+//                        val childUpdates = mutableMapOf<String, Any>(
+//                            "/$uid/tracks/$key/" to firebaseTrack
+//                        )
+//                        database.updateChildren(childUpdates)
+//                        track.firebaseKey = key
+//                        if (key != null && track.id != null) {
+//                            recordTrackProvider.recordFirebaseKeyAsync(db, key, track.id!!)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 
