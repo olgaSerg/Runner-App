@@ -1,84 +1,51 @@
 package com.example.runnerapp.fragments
 
-import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.database.sqlite.SQLiteDatabase
-import android.location.Location
 import android.os.Bundle
-import android.os.Looper
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import com.example.runnerapp.App
+import com.example.runnerapp.*
 import com.example.runnerapp.R
-import com.example.runnerapp.TimerService
-import com.example.runnerapp.activities.FASTEST_INTERVAL
-import com.example.runnerapp.activities.UPDATE_INTERVAL
 import com.example.runnerapp.models.TrackModel
 import com.example.runnerapp.providers.GetTracksProvider
 import com.example.runnerapp.providers.RecordTrackProvider
-import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 
-class ButtonFinishFragment : Fragment(R.layout.fragment_button_finish) {
+class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
 
     private var textViewTimer: TextView? = null
     private var buttonFinish: Button? = null
     private var buttonFinishClick: OnButtonFinishClick? = null
     private var time = 0.0
-    private var timerStarted = false
     private var routeList = arrayListOf<LatLng>()
     private var totalDistance = 0.0
     private var startTime: Date? = null
-    private var serviceIntent: Intent? = null
-    private var mLocationRequest: LocationRequest? = null
-    private var mFusedLocationClient: FusedLocationProviderClient? = null
+    private var serviceTimerIntent: Intent? = null
+    private var serviceLocationIntent: Intent? = null
     private lateinit var database: DatabaseReference
+    private var errorDialogClick: OnErrorDialogClick? = null
 
-    private var mLocationCallback: LocationCallback = object : LocationCallback() {
-
-        override fun onLocationResult(locationResult: LocationResult) {
-            val locationList = locationResult.locations
-            if (locationList.isNotEmpty()) {
-                val location = locationList.last()
-                if (routeList.isEmpty()) {
-                    val newLocation = LatLng(location.latitude, location.longitude)
-                    routeList.add(newLocation)
-                }
-                if (routeList.isNotEmpty()) {
-                    val lastLocation = routeList[routeList.lastIndex]
-                    val newLocation = LatLng(location.latitude, location.longitude)
-                    if (lastLocation != newLocation) {
-                        val result: FloatArray = floatArrayOf(0.0F)
-                        Location.distanceBetween(
-                            lastLocation.latitude,
-                            lastLocation.longitude,
-                            newLocation.latitude,
-                            newLocation.longitude,
-                            result
-                        )
-                        if (result[0] >= 5) {
-                            routeList.add(newLocation)
-                            totalDistance += result[0]
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     interface OnButtonFinishClick {
         fun clickFinishButton(time: String, totalDistance: Double)
+    }
+
+    interface OnErrorDialogClick {
+        fun onErrorDialogClick()
     }
 
     override fun onAttach(context: Context) {
@@ -88,71 +55,48 @@ class ButtonFinishFragment : Fragment(R.layout.fragment_button_finish) {
         } catch (e: ClassCastException) {
             throw ClassCastException("$activity must implement OnButtonFinishClick")
         }
+
+        errorDialogClick = try {
+            activity as OnErrorDialogClick
+        } catch (e: ClassCastException) {
+            throw ClassCastException("$activity must implement OnErrorDialogClick")
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        serviceIntent = Intent(context, TimerService::class.java)
+        serviceTimerIntent = Intent(context, TimerService::class.java)
         requireActivity().registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
 
         textViewTimer = view.findViewById(R.id.text_view_timer)
         buttonFinish = view.findViewById(R.id.button_finish)
 
-
         startTime = Date()
-        createLocationRequest()
+
         startTimer()
 
         setButtonFinishClickListener()
     }
 
-    @SuppressLint("MissingPermission")
-    private fun createLocationRequest() {
-        mLocationRequest = LocationRequest.create()
-        if (mLocationRequest != null) {
-            mLocationRequest!!.interval = UPDATE_INTERVAL
-            mLocationRequest!!.fastestInterval = FASTEST_INTERVAL
-            mLocationRequest!!.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-            mFusedLocationClient =
-                LocationServices.getFusedLocationProviderClient(requireActivity())
-            mFusedLocationClient?.requestLocationUpdates(
-                mLocationRequest!!,
-                mLocationCallback,
-                Looper.myLooper()!!
-            )
-        }
-    }
-
     private fun startTimer() {
-        serviceIntent?.putExtra(TimerService.TIME_EXTRA, time)
-        requireActivity().startService(serviceIntent)
-        timerStarted = true
+        serviceTimerIntent?.putExtra(TimerService.TIME_EXTRA, time)
+        requireActivity().startService(serviceTimerIntent)
+        serviceLocationIntent = Intent(context, LocationService::class.java)
+        requireActivity().registerReceiver(updateLocation, IntentFilter(LOCATION_UPDATE))
+        serviceLocationIntent?.putExtra(ROUTE_LIST, routeList)
+        requireActivity().startService(serviceLocationIntent)
     }
 
     private fun stopTimer() {
-        requireActivity().stopService(serviceIntent)
-        timerStarted = false
+        requireActivity().stopService(serviceTimerIntent)
+        requireActivity().unregisterReceiver(updateTime)
+        requireActivity().stopService(serviceLocationIntent)
     }
 
     private fun setButtonFinishClickListener() {
         val buttonFinish = buttonFinish ?: return
         buttonFinish.setOnClickListener {
 
-            mFusedLocationClient?.removeLocationUpdates(mLocationCallback)
             stopTimer()
-            val track = TrackModel()
-            track.duration = time.toLong() / 1000
-            track.startTime = startTime
-            track.routeList = routeList
-            track.distance = totalDistance.toInt(
-
-            )
-            val db = App.instance?.dBHelper?.writableDatabase ?: return@setOnClickListener
-
-            val recordTrackProvider = RecordTrackProvider()
-            recordTrackProvider.recordTrackExecute(db, track)
-                .onSuccess {
-                    writeTracksToFirebase(db)
-                }
 
             buttonFinishClick?.clickFinishButton(getTimeStringFromDouble(time), totalDistance)
         }
@@ -160,7 +104,6 @@ class ButtonFinishFragment : Fragment(R.layout.fragment_button_finish) {
 
     private val updateTime: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (!timerStarted) return
             val textViewTimer = textViewTimer ?: return
             val currentTime = Date()
             if (startTime != null) {
@@ -170,6 +113,39 @@ class ButtonFinishFragment : Fragment(R.layout.fragment_button_finish) {
         }
     }
 
+    private val updateLocation: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            routeList = intent.getParcelableArrayListExtra<LatLng>(ROUTE_LIST) as ArrayList<LatLng>
+            totalDistance = intent.getDoubleExtra(DISTANCE, 0.0)
+            if (routeList.isEmpty()) {
+                AlertDialog.Builder(requireContext())
+                    .setMessage("Трек не будет сохранен, так как маршрут отсутсвует")
+                    .setPositiveButton(
+                        "ок"
+                    ) { dialog, id -> errorDialogClick?.onErrorDialogClick() }
+                    .setCancelable(false)
+                    .create()
+                    .show()
+                return
+            }
+            recordTrack()
+        }
+    }
+
+    private fun recordTrack() {
+        val track = TrackModel()
+        track.duration = time.toLong() / 1000
+        track.startTime = startTime
+        track.routeList = routeList
+        track.distance = totalDistance.toInt()
+        val db = App.instance?.dBHelper?.writableDatabase ?: return
+
+        val recordTrackProvider = RecordTrackProvider()
+        recordTrackProvider.recordTrackExecute(db, track)
+            .onSuccess {
+                writeTracksToFirebase(db)
+            }
+    }
     private fun getTimeStringFromDouble(time: Double): String {
         val resultInt = time.roundToInt() / 1000
         val hours = resultInt % 86400 / 3600
@@ -213,5 +189,6 @@ class ButtonFinishFragment : Fragment(R.layout.fragment_button_finish) {
                 }
             }
         }
+            .onSuccess { requireActivity().unregisterReceiver(updateLocation) }
     }
 }

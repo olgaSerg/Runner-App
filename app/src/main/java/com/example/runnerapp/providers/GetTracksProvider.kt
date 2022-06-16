@@ -25,7 +25,7 @@ class GetTracksProvider {
         return Task.callInBackground {
             val args = arrayOf(uid)
             val cursor = db.rawQuery(
-                """SELECT id, start_time, distance, running_time, firebase_key FROM track WHERE uid = ? ORDER BY start_time DESC""",
+                """SELECT id, start_time, distance, route, running_time, firebase_key FROM track WHERE uid = ? ORDER BY start_time DESC""",
                 args
             )
             val tracks = arrayListOf<TrackModel>()
@@ -39,6 +39,8 @@ class GetTracksProvider {
                     track.distance = getInt(getColumnIndexOrThrow("distance"))
                     track.duration = getLong(getColumnIndexOrThrow("running_time"))
                     track.firebaseKey = getString(getColumnIndexOrThrow("firebase_key"))
+                    val jsonString = getString(getColumnIndexOrThrow("route"))
+                    track.routeList = parseJSON(jsonString)
                     tracks.add(track)
                 }
             }

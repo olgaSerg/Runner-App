@@ -1,17 +1,19 @@
 package com.example.runnerapp.activities
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.example.runnerapp.R
-import com.example.runnerapp.fragments.ButtonFinishFragment
-import com.example.runnerapp.fragments.ButtonStartFragment
+import android.widget.Toast
+import com.example.runnerapp.*
+import com.example.runnerapp.fragments.RunningFinishFragment
+import com.example.runnerapp.fragments.RunningStartFragment
 import com.example.runnerapp.fragments.ResultScreenFragment
 
 const val UPDATE_INTERVAL = (10 * 1000).toLong()
 const val FASTEST_INTERVAL: Long = 2000
 
-class RunningActivity : AppCompatActivity(), ButtonStartFragment.OnButtonStartClick,
-    ButtonFinishFragment.OnButtonFinishClick {
+class RunningActivity : AppCompatActivity(), RunningStartFragment.OnButtonStartClick,
+    RunningFinishFragment.OnButtonFinishClick, RunningFinishFragment.OnErrorDialogClick {
 
     private var totalDistance = 0.0
     private var containerNumber = 1
@@ -21,9 +23,10 @@ class RunningActivity : AppCompatActivity(), ButtonStartFragment.OnButtonStartCl
         setContentView(R.layout.activity_running)
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                .add(R.id.fragment_container, ButtonStartFragment())
+                .add(R.id.fragment_container, RunningStartFragment())
                 .commit()
         }
+        else flipCard()
     }
 
     private fun flipCard(time: String? = null, trackDistance: Double? = null) {
@@ -35,7 +38,7 @@ class RunningActivity : AppCompatActivity(), ButtonStartFragment.OnButtonStartCl
                     R.anim.card_flip_left_in,
                     R.anim.card_flip_left_out
                 )
-                .replace(R.id.fragment_container, ButtonFinishFragment())
+                .replace(R.id.fragment_container, RunningFinishFragment())
                 .commit()
             containerNumber++
         } else {
@@ -54,6 +57,7 @@ class RunningActivity : AppCompatActivity(), ButtonStartFragment.OnButtonStartCl
                             ResultScreenFragment.newInstance(time, totalDistance)
                         )
                         .commit()
+                    containerNumber++
                 }
             }
         }
@@ -68,7 +72,21 @@ class RunningActivity : AppCompatActivity(), ButtonStartFragment.OnButtonStartCl
         containerNumber = 2
         flipCard(time, totalDistance)
     }
+
+    override fun onBackPressed() {
+        if (containerNumber == 2) {
+            Toast.makeText(this, """Пробежка не завершена, нажмите "Финиш"""", Toast.LENGTH_SHORT)
+                .show()
+        } else {
+            startActivity(Intent(this, MainScreenActivity::class.java))
+        }
+    }
+
+    override fun onErrorDialogClick() {
+        startActivity(Intent(this, MainScreenActivity::class.java))
+    }
 }
+
 
 
 

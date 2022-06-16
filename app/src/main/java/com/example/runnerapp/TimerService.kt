@@ -8,7 +8,7 @@ import java.util.TimerTask
 
 class TimerService : Service() {
 
-    override fun onBind(p0: Intent?): IBinder? = null
+    override fun onBind(intent: Intent?): IBinder? = null
 
     private val timer = Timer()
 
@@ -22,7 +22,7 @@ class TimerService : Service() {
         super.onDestroy()
     }
 
-    private inner class TimeTask() : TimerTask() {
+    private inner class TimeTask : TimerTask() {
         override fun run() {
             val intent = Intent(TIMER_UPDATED)
             sendBroadcast(intent)

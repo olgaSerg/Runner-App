@@ -7,7 +7,7 @@ import android.view.View
 import android.widget.Button
 import com.example.runnerapp.R
 
-class ButtonStartFragment : Fragment(R.layout.fragment_button_start) {
+class RunningStartFragment : Fragment(R.layout.fragment_running_start) {
 
     private var buttonStartClick: OnButtonStartClick? = null
 
