@@ -8,6 +8,8 @@ import android.widget.TextView
 import bolts.Task
 import com.example.runnerapp.App
 import com.example.runnerapp.R
+import com.example.runnerapp.State
+import com.example.runnerapp.activities.STATE
 import com.example.runnerapp.models.TrackModel
 import com.example.runnerapp.providers.GetTracksProvider
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -17,8 +19,6 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.maps.model.LatLngBounds
 
-const val TRACK_ID = "track_id"
-
 class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     GoogleMap.OnMyLocationButtonClickListener,
     OnMapReadyCallback {
@@ -27,11 +27,12 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     private var textViewDuration: TextView? = null
     private lateinit var mMap: GoogleMap
     private var selectedTrack: TrackModel? = null
+    private var state: State? = null
 
     companion object {
-        fun newInstance(trackId: Int): SelectedTrackFragment {
+        fun newInstance(state: State): SelectedTrackFragment {
             val args = Bundle()
-            args.putSerializable(TRACK_ID, trackId)
+            args.putSerializable(STATE, state)
             val selectedTrackFragment = SelectedTrackFragment()
             selectedTrackFragment.arguments = args
             return selectedTrackFragment
@@ -49,17 +50,21 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     }
 
     private fun getSelectedTrack(onMapReadyCallback: SelectedTrackFragment) {
-        val selectedTrackId: Int = arguments?.getSerializable(TRACK_ID) as Int
+        state = arguments?.getSerializable(STATE) as State
         val db = App.instance?.db ?: return
         val tracksProvider = GetTracksProvider()
-        tracksProvider.getSelectedTrackAsync(db, selectedTrackId).onSuccess({
-//            Thread.sleep(10000)
-            selectedTrack = it.result
-        }, Task.BACKGROUND_EXECUTOR).onSuccess({
-            val mapFragment: SupportMapFragment = childFragmentManager
-                .findFragmentById(R.id.map) as SupportMapFragment
-            mapFragment.getMapAsync(onMapReadyCallback)
-        }, Task.UI_THREAD_EXECUTOR)
+        val state = state ?: return
+        val selectedTrackId = state.trackId
+        if (selectedTrackId != null) {
+            tracksProvider.getSelectedTrackAsync(db, selectedTrackId).onSuccess({
+                selectedTrack = it.result
+                state.trackId = it.result.id
+            }, Task.BACKGROUND_EXECUTOR).onSuccess({
+                val mapFragment: SupportMapFragment = childFragmentManager
+                    .findFragmentById(R.id.map) as SupportMapFragment
+                mapFragment.getMapAsync(onMapReadyCallback)
+            }, Task.UI_THREAD_EXECUTOR)
+        }
     }
 
     private fun displayTrack(track: TrackModel) {
@@ -87,10 +92,19 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
         for (latLng in selectedTrack!!.routeList!!) {
             builder.include(latLng)
         }
-        val bounds = builder.build()
-        mMap.moveCamera(
-            CameraUpdateFactory.newLatLngBounds(bounds, 100)
-        )
+
+        mMap.setOnMapLoadedCallback {
+            mMap.animateCamera(
+                CameraUpdateFactory.newLatLngBounds(
+                    builder.build(),
+                    100
+                )
+            )
+        }
+//        val bounds = builder.build()
+//        mMap.moveCamera(
+//            CameraUpdateFactory.newLatLngBounds(bounds, 100)
+//        )
 
         mMap.addMarker(
             MarkerOptions()
@@ -111,7 +125,6 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     private fun enableMyLocation() {
         mMap.isMyLocationEnabled = true
     }
-
 
     override fun onMyLocationButtonClick(): Boolean {
         return false

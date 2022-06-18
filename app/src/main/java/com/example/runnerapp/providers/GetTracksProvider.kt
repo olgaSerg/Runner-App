@@ -100,16 +100,18 @@ class GetTracksProvider {
             val keysListFirebase = arrayListOf<String>()
             val uid = Firebase.auth.uid
 
-                if (uid != null) {
-                    database.child(uid).child("tracks").get().addOnSuccessListener {
+            if (uid != null) {
+                database.child(uid).child("tracks").get().addOnSuccessListener {
+                    if (it.value != null) {
                         val dataSnapshot = it.value as HashMap<String, Any>
 
                         for (data in dataSnapshot) {
                             keysListFirebase.add(data.key)
                         }
-                        callback(keysListFirebase)
                     }
+                    callback(keysListFirebase)
                 }
+            }
             keysListFirebase
         }
     }
@@ -122,21 +124,23 @@ class GetTracksProvider {
         val tracksList = arrayListOf<TrackModel>()
         val uid = Firebase.auth.uid ?: return tracksList
         database.child(uid).child("tracks").get().addOnSuccessListener {
-            val dataSnapshot = it.value as HashMap<String, Any>
-            for (key in keysList) {
-                for (shot in dataSnapshot) {
-                    if (shot.key == key) {
-                        val track = TrackModel()
-                        val hashMap = dataSnapshot.getValue(shot.key) as HashMap<String, Any>
-                        track.duration = hashMap.getValue("duration") as Long
-                        val distance = hashMap.getValue("distance") as Long
-                        track.distance = distance.toInt()
-                        val startTime = hashMap.getValue("startTime") as HashMap<String, Any>
-                        val time = startTime.getValue("time") as Long
-                        track.startTime = formatTime(time)
-                        track.routeList = hashMap.getValue("routeList") as ArrayList<LatLng>
-                        track.firebaseKey = shot.key
-                        tracksList.add(track)
+            if (it.value != null) {
+                val dataSnapshot = it.value as HashMap<String, Any>
+                for (key in keysList) {
+                    for (shot in dataSnapshot) {
+                        if (shot.key == key) {
+                            val track = TrackModel()
+                            val hashMap = dataSnapshot.getValue(shot.key) as HashMap<String, Any>
+                            track.duration = hashMap.getValue("duration") as Long
+                            val distance = hashMap.getValue("distance") as Long
+                            track.distance = distance.toInt()
+                            val startTime = hashMap.getValue("startTime") as HashMap<String, Any>
+                            val time = startTime.getValue("time") as Long
+                            track.startTime = formatTime(time)
+                            track.routeList = hashMap.getValue("routeList") as ArrayList<LatLng>
+                            track.firebaseKey = shot.key
+                            tracksList.add(track)
+                        }
                     }
                 }
             }

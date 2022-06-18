@@ -9,7 +9,8 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.constraintlayout.widget.Constraints.TAG
 import com.example.runnerapp.R
-import com.example.runnerapp.models.ProfileModel
+import com.example.runnerapp.State
+import com.example.runnerapp.activities.STATE
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -26,6 +27,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
     private var buttonLogin: Button? = null
     private var buttonLoginClickListener: OnButtonLoginClickListener? = null
     private lateinit var auth: FirebaseAuth
+    private var state: State? = null
     private var signUpClickListener: OnSignUpClickListener? = null
 
     interface OnButtonLoginClickListener {
@@ -34,6 +36,16 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
     interface OnSignUpClickListener {
         fun onSignUpClickListener()
+    }
+
+    companion object {
+        fun newInstance(state: State): RegistrationFragment {
+            val args = Bundle()
+            args.putSerializable(STATE, state)
+            val registrationFragment = RegistrationFragment()
+            registrationFragment.arguments = args
+            return registrationFragment
+        }
     }
 
     override fun onAttach(context: Context) {
@@ -56,7 +68,18 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
         initializeFields(view)
 
+        state = arguments?.getSerializable(STATE) as State
+
         val buttonLogin = buttonLogin ?: return
+        val state = state ?: return
+
+        displayState()
+
+        if (state.isTaskRegistrationStarted) {
+            buttonRegistration?.callOnClick()
+        }
+
+        state.isTaskRegistrationStarted = !buttonLogin.isEnabled
 
         setButtonRegistrationClickListener()
         buttonLogin.setOnClickListener {
@@ -84,6 +107,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         val list = listOf(email, firstName, lastName, password, confirmPassword)
 
         buttonRegistration.setOnClickListener {
+            state?.isTaskRegistrationStarted = true
+            buttonRegistration.isEnabled = false
             val validationResults = listOf(
                 checkPasswordsMatch(password, confirmPassword),
                 checkFields(list),
@@ -92,8 +117,10 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
             val isFormValid = validationResults.all { it }
 
             if (isFormValid) {
-                createUser(email, firstName, lastName)
-                signUpClickListener?.onSignUpClickListener()
+                createUser(email)
+            } else {
+                state?.isTaskRegistrationStarted = false
+                buttonRegistration.isEnabled = true
             }
         }
     }
@@ -129,7 +156,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         field.error = "Заполните пустое поле"
     }
 
-    private fun createUser(email: TextInputLayout, firstName: TextInputLayout, lastName: TextInputLayout) {
+    private fun createUser(email: TextInputLayout) {
         auth = Firebase.auth
 
         auth.createUserWithEmailAndPassword(
@@ -138,27 +165,34 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         )
             .addOnCompleteListener(requireActivity()) { task ->
                 if (task.isSuccessful) {
-                    val uid = auth.uid
-                    fillProfile(email, firstName, lastName, uid!!)
+                    signUpClickListener?.onSignUpClickListener()
                     Log.d(TAG, "createUserWithEmail:success")
                 } else {
                     Log.w(TAG, "createUserWithEmail:failure", task.exception)
                     Toast.makeText(requireContext(), "Authentication failed.",
                         Toast.LENGTH_SHORT).show()
                 }
+                state?.isTaskRegistrationStarted = false
+                buttonRegistration?.isEnabled = true
             }
     }
 
-    private fun fillProfile(
-        email: TextInputLayout,
-        firstName: TextInputLayout,
-        lastName: TextInputLayout,
-        uid: String
-    ) {
-        val profileModel = ProfileModel()
-        profileModel.email = email.editText?.text.toString()
-        profileModel.firstName = firstName.editText?.text.toString()
-        profileModel.lastName = lastName.editText?.text.toString()
-        profileModel.uid = uid
+    override fun onPause() {
+        super.onPause()
+        val state = state ?: return
+        state.email = email?.editText?.text.toString()
+        state.password = password?.editText?.text.toString()
+        state.confirmPassword = confirmPassword?.editText?.text.toString()
+        state.firstName = firstName?.editText?.text.toString()
+        state.lastName = lastName?.editText?.text.toString()
+    }
+
+    private fun displayState() {
+        val state = state ?: return
+        email?.editText?.setText(state.email)
+        password?.editText?.setText(state.password)
+        confirmPassword?.editText?.setText(state.confirmPassword)
+        firstName?.editText?.setText(state.firstName)
+        lastName?.editText?.setText(state.lastName)
     }
 }

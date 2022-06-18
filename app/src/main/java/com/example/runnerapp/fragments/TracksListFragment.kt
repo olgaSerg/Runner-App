@@ -17,6 +17,9 @@ import com.example.runnerapp.models.TrackModel
 import com.example.runnerapp.providers.GetTracksProvider
 import com.example.runnerapp.providers.RecordTrackProvider
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 
 class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
 
@@ -84,35 +87,49 @@ class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
     }
 
     private fun setRefreshListener() {
-        db = App.instance?.db ?: return
         val pullToRefresh = pullToRefresh ?: return
+        pullToRefresh.setOnRefreshListener {
+            startSynchronization(pullToRefresh)
+        }
+    }
+
+    private fun startSynchronization(pullToRefresh: SwipeRefreshLayout) {
+        val db = App.instance?.db ?: return
         val getTracksProvider = GetTracksProvider()
         val tracksProvider = GetTracksProvider()
         val recordTrackProvider = RecordTrackProvider()
-        pullToRefresh.setOnRefreshListener {
-            getTracksProvider.getTracksKeysFromFirebase { keysList ->
-                Log.i("!!!keysListFirebase", keysList.joinToString(separator = " "))
-                getTracksProvider.getFirebaseKeyFromDbAsync(db!!).onSuccess({
-                    Log.i("!!!keysFromDB", it.result.joinToString(separator = " "))
-                    val result = getNewTracksKeysFromFirebase(keysList, it.result)
-                    Log.i("!!!newKeysListFirebase", result.joinToString(separator = " "))
-                    result
-                }, Task.BACKGROUND_EXECUTOR)
-                    .onSuccess {
-                        getTracksProvider.getNewTracksList(it.result) { tracksList ->
-                            Log.i("newTracksListFromFirebase", tracksList.joinToString(separator = " "))
-                            recordTrackProvider.recordNewTracksFromFirebase(db!!, tracksList)
-
-                                .onSuccess {
-                                    pullToRefresh.isRefreshing = false
-                                    tracksProvider.getTracksAsync(db!!).onSuccess({
-                                        displayTracksList()
-                                        Log.i("getTracksListFromDB", it.result.joinToString(separator = " "))
-                                    }, Task.UI_THREAD_EXECUTOR)
-                                }
-                        }
+        getTracksProvider.getTracksKeysFromFirebase { keysList ->
+            Log.i("!!!keysListFirebase", keysList.joinToString(separator = " "))
+            getTracksProvider.getFirebaseKeyFromDbAsync(db).onSuccess({
+                Log.i("!!!keysFromDB", it.result.joinToString(separator = " "))
+                val result = getNewTracksKeysFromFirebase(keysList, it.result)
+                Log.i("!!!newKeysListFirebase", result.joinToString(separator = " "))
+                result
+            }, Task.BACKGROUND_EXECUTOR)
+                .onSuccess {
+                    getTracksProvider.getNewTracksList(it.result) { tracksList ->
+                        Log.i(
+                            "newTracksListFromFirebase",
+                            tracksList.joinToString(separator = " ")
+                        )
+                        recordTrackProvider.recordNewTracksFromFirebase(db, tracksList)
+                            .continueWith {
+                                writeTracksToFirebase(
+                                    getTracksProvider,
+                                    recordTrackProvider,
+                                    db
+                                )
+                                pullToRefresh.isRefreshing = false
+                                tracksProvider.getTracksAsync(db).onSuccess({
+                                    displayTracksList()
+                                    Log.i(
+                                        "getTracksListFromDB",
+                                        it.result.joinToString(separator = " ")
+                                    )
+                                }, Task.UI_THREAD_EXECUTOR)
+                            }
                     }
-            }
+                }
         }
     }
 
@@ -136,5 +153,44 @@ class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
             }
         }
         return newKeysList
+    }
+
+    private fun writeTracksToFirebase(
+        getTracksProvider: GetTracksProvider,
+        recordTrackProvider: RecordTrackProvider,
+        db: SQLiteDatabase
+    ) {
+        var tracks: ArrayList<TrackModel>? = null
+        val uid = Firebase.auth.uid
+        val database = Firebase.database.reference
+        getTracksProvider.getTracksAsync(db).onSuccess { tracks = it.result }.onSuccess {
+            if (tracks != null) {
+                for (track in tracks!!) {
+                    val key = database.child("track").push().key
+                    val firebaseTrack = TrackModel(
+                        null,
+                        track.firebaseKey,
+                        track.startTime,
+                        track.routeList,
+                        track.distance,
+                        track.duration
+                    )
+                    val childUpdates = mutableMapOf<String, Any>(
+                        "/$uid/tracks/$key/" to firebaseTrack
+                    )
+                    if (track.firebaseKey == null) {
+                        database.updateChildren(childUpdates)
+                        track.firebaseKey = key
+                    }
+                    if (track.firebaseKey != null && track.id != null) {
+                        recordTrackProvider.recordFirebaseKeyAsync(
+                            db,
+                            track.firebaseKey!!,
+                            track.id!!
+                        )
+                    }
+                }
+            }
+        }
     }
 }

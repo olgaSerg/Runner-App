@@ -21,7 +21,7 @@
         android:id="@+id/text_view_title_distance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/distance"
+        android:text="@string/track_distance"
         android:textSize="18sp"
         app:layout_constraintEnd_toStartOf="@+id/text_view_title_running_time"
         app:layout_constraintStart_toStartOf="parent"

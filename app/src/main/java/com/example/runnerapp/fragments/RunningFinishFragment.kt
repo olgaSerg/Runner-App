@@ -1,12 +1,15 @@
 package com.example.runnerapp.fragments
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Button
@@ -24,6 +27,11 @@ import com.google.firebase.ktx.Firebase
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.widget.Toast
+import com.example.runnerapp.activities.STATE
+
 
 class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
 
@@ -38,6 +46,7 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
     private var serviceLocationIntent: Intent? = null
     private lateinit var database: DatabaseReference
     private var errorDialogClick: OnErrorDialogClick? = null
+    private var state: State? = null
 
 
     interface OnButtonFinishClick {
@@ -48,8 +57,20 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
         fun onErrorDialogClick()
     }
 
+    companion object {
+        fun newInstance(state: State): RunningFinishFragment {
+            val args = Bundle()
+            args.putSerializable(STATE, state)
+            val runningFinishFragment = RunningFinishFragment()
+            runningFinishFragment.arguments = args
+            return runningFinishFragment
+        }
+    }
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
+        registerReceivers()
+
         buttonFinishClick = try {
             activity as OnButtonFinishClick
         } catch (e: ClassCastException) {
@@ -64,15 +85,23 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
         serviceTimerIntent = Intent(context, TimerService::class.java)
-        requireActivity().registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
+        serviceLocationIntent = Intent(context, LocationService::class.java)
 
         textViewTimer = view.findViewById(R.id.text_view_timer)
         buttonFinish = view.findViewById(R.id.button_finish)
 
-        startTime = Date()
+        state = arguments?.getSerializable(STATE) as State
+        val state = state ?: return
 
-        startTimer()
+        if (state.timeStart == null) {
+            startTime = Date()
+            state.timeStart = startTime
+            startTimer()
+        } else {
+            startTime = state.timeStart!!
+        }
 
         setButtonFinishClickListener()
     }
@@ -80,16 +109,30 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
     private fun startTimer() {
         serviceTimerIntent?.putExtra(TimerService.TIME_EXTRA, time)
         requireActivity().startService(serviceTimerIntent)
-        serviceLocationIntent = Intent(context, LocationService::class.java)
-        requireActivity().registerReceiver(updateLocation, IntentFilter(LOCATION_UPDATE))
+//        serviceLocationIntent = Intent(context, LocationService::class.java)
         serviceLocationIntent?.putExtra(ROUTE_LIST, routeList)
         requireActivity().startService(serviceLocationIntent)
     }
 
     private fun stopTimer() {
         requireActivity().stopService(serviceTimerIntent)
-        requireActivity().unregisterReceiver(updateTime)
         requireActivity().stopService(serviceLocationIntent)
+    }
+
+    private fun registerReceivers() {
+        requireActivity().registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
+        requireActivity().registerReceiver(updateLocation, IntentFilter(LOCATION_UPDATE))
+    }
+
+    private fun unregisterReceivers() {
+        if (updateTime != null) {
+            requireActivity().unregisterReceiver(updateTime)
+            updateTime = null
+        }
+        if (updateLocation != null) {
+            requireActivity().unregisterReceiver(updateLocation)
+            updateLocation = null
+        }
     }
 
     private fun setButtonFinishClickListener() {
@@ -98,11 +141,12 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
 
             stopTimer()
 
-            buttonFinishClick?.clickFinishButton(getTimeStringFromDouble(time), totalDistance)
+            Log.v("!!!!","click finish")
+//            buttonFinishClick?.clickFinishButton(getTimeStringFromDouble(time), totalDistance)
         }
     }
 
-    private val updateTime: BroadcastReceiver = object : BroadcastReceiver() {
+    private var updateTime: BroadcastReceiver? = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val textViewTimer = textViewTimer ?: return
             val currentTime = Date()
@@ -113,7 +157,7 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
         }
     }
 
-    private val updateLocation: BroadcastReceiver = object : BroadcastReceiver() {
+    private var updateLocation: BroadcastReceiver? = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             routeList = intent.getParcelableArrayListExtra<LatLng>(ROUTE_LIST) as ArrayList<LatLng>
             totalDistance = intent.getDoubleExtra(DISTANCE, 0.0)
@@ -128,7 +172,17 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
                     .show()
                 return
             }
-            recordTrack()
+            buttonFinishClick?.clickFinishButton(getTimeStringFromDouble(time), totalDistance)
+            if (hasConnection()) {
+                recordTrack()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Интернет соединение отсутствует",
+                    Toast.LENGTH_SHORT
+                ).show()
+                recordTrackToLocalDb()
+            }
         }
     }
 
@@ -146,6 +200,19 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
                 writeTracksToFirebase(db)
             }
     }
+
+    private fun recordTrackToLocalDb() {
+        val track = TrackModel()
+        track.duration = time.toLong() / 1000
+        track.startTime = startTime
+        track.routeList = routeList
+        track.distance = totalDistance.toInt()
+        val db = App.instance?.dBHelper?.writableDatabase ?: return
+
+        val recordTrackProvider = RecordTrackProvider()
+        recordTrackProvider.recordTrackExecute(db, track)
+    }
+
     private fun getTimeStringFromDouble(time: Double): String {
         val resultInt = time.roundToInt() / 1000
         val hours = resultInt % 86400 / 3600
@@ -172,7 +239,7 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
                     val key = database.child("track").push().key
                     val firebaseTrack = TrackModel(
                         null,
-                        null,
+                        track.firebaseKey,
                         track.startTime,
                         track.routeList,
                         track.distance,
@@ -181,14 +248,37 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
                     val childUpdates = mutableMapOf<String, Any>(
                         "/$uid/tracks/$key/" to firebaseTrack
                     )
-                    database.updateChildren(childUpdates)
-                    track.firebaseKey = key
-                    if (key != null && track.id != null) {
-                        recordTrackProvider.recordFirebaseKeyAsync(db, key, track.id!!)
+                    if (track.firebaseKey == null) {
+                        database.updateChildren(childUpdates).addOnSuccessListener {
+                            track.firebaseKey = key
+                            if (key != null && track.id != null) {
+                                recordTrackProvider.recordFirebaseKeyAsync(db, key, track.id!!)
+                            }
+                        }
+
                     }
                 }
             }
         }
-            .onSuccess { requireActivity().unregisterReceiver(updateLocation) }
+            .onSuccess { unregisterReceivers() }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun hasConnection(): Boolean {
+        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return when {
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            else -> false
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.v("!!!!onDestroy", "onDestroy")
+        unregisterReceivers()
+//        stopTimer()
     }
 }

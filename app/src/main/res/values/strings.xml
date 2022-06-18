@@ -16,7 +16,6 @@
     <string name="reminders">Напоминания</string>
     <string name="logout">Выход</string>
     <string name="request_permission">Доступ к местоположению необходим для записи маршрута и отображения на карте. Перейдите в экран настроек для предоставления доступа к местополжению</string>
-    <string name="distance">Дистанция</string>
     <string name="running_time">Время пробежки</string>
     <string name="ann_new_track">Новый трек</string>
     <string name="start_date">Дата старта</string>

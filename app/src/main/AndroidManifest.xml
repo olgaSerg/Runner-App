@@ -20,7 +20,9 @@
         android:theme="@style/Theme.RunnerApp">
         <activity
             android:name=".activities.MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan">
+        </activity>
 
         <receiver
             android:name=".Notification"

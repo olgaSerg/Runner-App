@@ -34,7 +34,10 @@ class ResultScreenFragment : Fragment(R.layout.fragment_result_running_screen) {
         val textViewDistance = textViewDistance ?: return
         val textViewDuration = textViewDuration ?: return
 
-        textViewDuration.text = arguments?.getString(TIME)
-        textViewDistance.text = arguments?.getDouble(TRACK_DISTANCE).toString()
+        if (arguments != null) {
+            textViewDuration.text = requireArguments().getString(TIME)
+            val distance = requireArguments().getDouble(TRACK_DISTANCE).toInt() / 1000.0
+            textViewDistance.text = distance.toString()
+        }
     }
 }

@@ -12,6 +12,8 @@ import android.widget.TimePicker
 import androidx.fragment.app.Fragment
 import com.example.runnerapp.App
 import com.example.runnerapp.R
+import com.example.runnerapp.State
+import com.example.runnerapp.activities.STATE
 import com.example.runnerapp.models.NotificationModel
 import com.example.runnerapp.providers.NotificationProvider
 import java.util.Date
@@ -19,7 +21,6 @@ import java.util.Calendar
 
 const val CHANNEL_ID = "channelID"
 const val NOTIFICATION_ID = 1
-const val NOTIFICATION = "notification"
 
 class NotificationFragment : Fragment(R.layout.fragment_notification) {
 
@@ -30,6 +31,8 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
     private var buttonAddNotification: Button? = null
     private var buttonDelete: Button? = null
     private var buttonSave: Button? = null
+    private var notification: NotificationModel? = null
+    private var state: State? = null
 
     interface OnButtonAddNotificationClick {
         fun addNotification(time: Long)
@@ -40,9 +43,9 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
     }
 
     companion object {
-        fun newInstance(notification: NotificationModel): NotificationFragment {
+        fun newInstance(state: State): NotificationFragment {
             val args = Bundle()
-            args.putSerializable(NOTIFICATION, notification)
+            args.putSerializable(STATE, state)
             val notificationFragment = NotificationFragment()
             notificationFragment.arguments = args
             return notificationFragment
@@ -79,9 +82,12 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
         val buttonAddNotification = buttonAddNotification ?: return
         val db = App.instance?.db ?: return
 
-        if (arguments != null) {
-            val notification = arguments?.getSerializable(NOTIFICATION) as NotificationModel
-            val dataTime = notification.dataTime
+        state = arguments?.getSerializable(STATE) as State
+        val state = state ?: return
+
+        if (state.notification != null) {
+            notification = state.notification
+            val dataTime = notification?.dataTime
 
             val date = Date(dataTime!!)
             val calendar = Calendar.getInstance()
@@ -97,7 +103,7 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
             buttonSave.isEnabled = true
             buttonAddNotification.isEnabled = false
             buttonDelete.setOnClickListener {
-                val notificationId = notification.id
+                val notificationId = notification?.id
                 val notificationProvider = NotificationProvider()
                 if (notificationId != null) {
                     notificationProvider.deleteNotification(db, notificationId)
@@ -110,17 +116,16 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
                     .show()
             }
 
-
             buttonSave.setOnClickListener {
                 val title = "Время напоминания изменено на:"
                 val time = getTime(timePicker, datePicker)
-                notification.dataTime = time
+                notification?.dataTime = time
                 showAlert(time, title)
                 val notificationProvider = NotificationProvider()
-                notificationProvider.changeNotification(db, notification)
+                notificationProvider.changeNotification(db, notification!!)
             }
-
-        } else {
+        }
+         else {
             buttonDelete.isEnabled = false
             buttonSave.isEnabled = false
             buttonAddNotification.isEnabled = true
@@ -135,7 +140,6 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
             }
         }
     }
-
 
     private fun showAlert(time: Long, title: String) {
         val date = Date(time)
@@ -162,5 +166,14 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
         val calendar = Calendar.getInstance()
         calendar.set(year, month, day, hour, minute)
         return calendar.timeInMillis
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (timePicker != null && datePicker != null) {
+            val time = getTime(timePicker!!, datePicker!!)
+            state?.notification = NotificationModel()
+            state?.notification?.dataTime = time
+        }
     }
 }

@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.runnerapp.activities.FASTEST_INTERVAL
+import com.example.runnerapp.fragments.CHANNEL_ID
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 
@@ -97,12 +98,9 @@ class LocationService : Service() {
     }
 
     private fun startForegroundService() {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE)
-                as NotificationManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createNotificationChannel(notificationManager)
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            createNotificationChannel()
+//        }
 
         val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setAutoCancel(false)
@@ -115,13 +113,25 @@ class LocationService : Service() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(notificationManager: NotificationManager) {
-        val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            NOTIFICATION_CHANNEL_NAME,
-            NotificationManager.IMPORTANCE_LOW
-        )
-        notificationManager.createNotificationChannel(channel)
+    private fun createNotificationChannel() {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            val name = "CHANNEL"
+//            val descriptionText = "IT'S A CHANNEL"
+//            val importance = NotificationManager.IMPORTANCE_DEFAULT
+//            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+//                description = descriptionText
+//            }
+//            val notificationManager: NotificationManager =
+//                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//            notificationManager.createNotificationChannel(channel)
+//        }
+
+//        val channel = NotificationChannel(
+//            NOTIFICATION_CHANNEL_ID,
+//            NOTIFICATION_CHANNEL_NAME,
+//            NotificationManager.IMPORTANCE_LOW
+//        )
+//        notificationManager.createNotificationChannel(channel)
     }
 
     override fun onDestroy() {
