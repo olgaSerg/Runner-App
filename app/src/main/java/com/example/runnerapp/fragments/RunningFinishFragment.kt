@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.res.Configuration
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import android.util.Log
@@ -109,7 +108,6 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
     private fun startTimer() {
         serviceTimerIntent?.putExtra(TimerService.TIME_EXTRA, time)
         requireActivity().startService(serviceTimerIntent)
-//        serviceLocationIntent = Intent(context, LocationService::class.java)
         serviceLocationIntent?.putExtra(ROUTE_LIST, routeList)
         requireActivity().startService(serviceLocationIntent)
     }
@@ -224,7 +222,7 @@ class RunningFinishFragment : Fragment(R.layout.fragment_running_finish) {
     }
 
     private fun makeTimeString(hour: Int, min: Int, sec: Int, millis: Int): String =
-        String.format("%02d:%02d:%02d.%03d", hour, min, sec, millis)
+        String.format("%02d:%02d:%02d,%03d", hour, min, sec, millis)
 
     private fun writeTracksToFirebase(db: SQLiteDatabase) {
         val getTracksProvider = GetTracksProvider()

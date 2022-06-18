@@ -12,11 +12,11 @@ class NotificationProvider {
     fun recordNotification(
         db: SQLiteDatabase,
         notification: NotificationModel
-    ) {
+    ): Task<NotificationModel> {
         val date = notification.dataTime
         val args = arrayOf(date, uid)
 
-        Task.callInBackground {
+        return Task.callInBackground {
             db.execSQL(
                 """INSERT INTO "notification" (date_time, uid)
                     VALUES (?, ?)
@@ -29,6 +29,8 @@ class NotificationProvider {
                 notification.id = getInt(getColumnIndexOrThrow("id"))
             }
             cursor.close()
+
+            notification
         }
     }
 
@@ -67,8 +69,8 @@ class NotificationProvider {
         }
     }
 
-    fun deleteNotification(db: SQLiteDatabase, id: Int) {
-        Task.callInBackground {
+    fun deleteNotification(db: SQLiteDatabase, id: Int): Task<Unit> {
+        return Task.callInBackground {
             val args = arrayOf("$id")
             db.execSQL(
                 """DELETE FROM notification WHERE id = ?""",

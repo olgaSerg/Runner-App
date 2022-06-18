@@ -29,7 +29,6 @@ import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import android.location.LocationManager
-import android.util.Log
 import com.example.runnerapp.State
 
 const val TRACKS_LIST = "tracks_list"
@@ -42,7 +41,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     NotificationsListFragment.OnFabNotificationClickListener,
     NotificationFragment.OnButtonAddNotificationClick,
     NotificationsListFragment.OnNotificationItemClickListener,
-    NotificationFragment.OnPositiveButtonClick {
+    NotificationFragment.OnPositiveButtonClick, NotificationFragment.OnDeleteNotificationClick {
 
     private var toolbar: MaterialToolbar? = null
     private var drawerLayout: DrawerLayout? = null
@@ -168,14 +167,6 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         state.fragment = TRACKS_LIST
     }
 
-    private fun loadNotificationsList() {
-        supportFragmentManager.beginTransaction().apply {
-            replace(R.id.fragment_container, NotificationsListFragment())
-            commit()
-        }
-        state.fragment = NOTIFICATIONS_LIST
-    }
-
     private fun checkLocationServiceEnabled(): Boolean {
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         try {
@@ -299,25 +290,35 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         state.fragment = NOTIFICATION
     }
 
-    override fun addNotification(time: Long) {
+    private fun getPendingIntent(notification: NotificationModel): PendingIntent {
         val intent = Intent(applicationContext, Notification::class.java)
         intent.apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
-        val pendingIntent = PendingIntent.getBroadcast(
+        return PendingIntent.getBroadcast(
             applicationContext,
-            NOTIFICATION_ID,
+            notification.id!!,
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
+    }
+
+    override fun addNotification(notification: NotificationModel) {
+        val pendingIntent = getPendingIntent(notification)
 
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
-            time,
+            notification.dataTime!!,
             pendingIntent
         )
+    }
+
+    override fun deleteNotification(notification: NotificationModel) {
+        val pendingIntent = getPendingIntent(notification)
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(pendingIntent)
     }
 
     private fun createNotificationChannel() {

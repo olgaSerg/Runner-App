@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.DatePicker
 import android.widget.TimePicker
 import androidx.fragment.app.Fragment
+import bolts.Task
 import com.example.runnerapp.App
 import com.example.runnerapp.R
 import com.example.runnerapp.State
@@ -20,7 +21,7 @@ import java.util.Date
 import java.util.Calendar
 
 const val CHANNEL_ID = "channelID"
-const val NOTIFICATION_ID = 1
+const val NOTIFICATION_ID = 999
 
 class NotificationFragment : Fragment(R.layout.fragment_notification) {
 
@@ -33,13 +34,18 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
     private var buttonSave: Button? = null
     private var notification: NotificationModel? = null
     private var state: State? = null
+    private var deleteNotificationClick: OnDeleteNotificationClick? = null
 
     interface OnButtonAddNotificationClick {
-        fun addNotification(time: Long)
+        fun addNotification(notification: NotificationModel)
     }
 
     interface OnPositiveButtonClick {
         fun clickPositiveButton()
+    }
+
+    interface OnDeleteNotificationClick {
+        fun deleteNotification(notification: NotificationModel)
     }
 
     companion object {
@@ -64,6 +70,12 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
             activity as OnPositiveButtonClick
         } catch (e: ClassCastException) {
             throw ClassCastException("$activity must implement OnPositiveButtonClick")
+        }
+
+        deleteNotificationClick = try {
+            activity as OnDeleteNotificationClick
+        } catch (e: ClassCastException) {
+            throw ClassCastException("$activity must implement OnDeleteNotificationClick")
         }
     }
 
@@ -106,20 +118,23 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
                 val notificationId = notification?.id
                 val notificationProvider = NotificationProvider()
                 if (notificationId != null) {
-                    notificationProvider.deleteNotification(db, notificationId)
+                    notificationProvider.deleteNotification(db, notificationId).onSuccess ({
+                        deleteNotificationClick?.deleteNotification(notification!!)
+                        AlertDialog.Builder(requireContext())
+                            .setMessage(
+                                getString(R.string.notification_delete)
+                            )
+                            .setPositiveButton(getString(R.string.ok)) { _, _ -> positiveButtonClick?.clickPositiveButton() }
+                            .show()
+                    }, Task.UI_THREAD_EXECUTOR)
                 }
-                AlertDialog.Builder(requireContext())
-                    .setMessage(
-                        getString(R.string.notification_delete)
-                    )
-                    .setPositiveButton(getString(R.string.ok)) { _, _ -> positiveButtonClick?.clickPositiveButton() }
-                    .show()
             }
 
             buttonSave.setOnClickListener {
                 val title = "Время напоминания изменено на:"
                 val time = getTime(timePicker, datePicker)
                 notification?.dataTime = time
+                addNotificationListener?.addNotification(notification!!)
                 showAlert(time, title)
                 val notificationProvider = NotificationProvider()
                 notificationProvider.changeNotification(db, notification!!)
@@ -132,11 +147,12 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
             buttonAddNotification.setOnClickListener {
                 val time = getTime(timePicker, datePicker)
                 val notification = NotificationModel(null, time)
-                addNotificationListener?.addNotification(time)
-                val title = getString(R.string.set_notification)
-                showAlert(time, title)
                 val notificationProvider = NotificationProvider()
-                notificationProvider.recordNotification(db, notification)
+                notificationProvider.recordNotification(db, notification).onSuccess ({
+                    addNotificationListener?.addNotification(it.result)
+                    val title = getString(R.string.set_notification)
+                    showAlert(time, title)
+                }, Task.UI_THREAD_EXECUTOR)
             }
         }
     }
