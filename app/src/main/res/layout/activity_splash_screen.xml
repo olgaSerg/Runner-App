@@ -23,7 +23,7 @@
         android:id="@+id/text_view_app"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="RunnerApp"
+        android:text="@string/title_app"
         android:textColor="@color/black"
         android:textSize="38sp"
         android:textStyle="bold"

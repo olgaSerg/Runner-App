@@ -75,9 +75,9 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
         val textViewDistance = textViewDistance ?: return
         val textViewDuration = textViewDuration ?: return
         if (track.distance != null && track.duration != null) {
-            val distance = track.distance!! / 1000.0
-            val duration = formatDate(track.duration!!)
-            textViewDistance.text = distance.toString()
+            val distance = track.distance!!
+            val duration = timeToString(track.duration!!)
+            textViewDistance.text = formatDistance(distance)
             textViewDuration.text = duration
         }
     }
@@ -86,19 +86,22 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     override fun onMapReady(map: GoogleMap) {
         mMap = map
         val mMap = mMap ?: return
+        val routeList = selectedTrack?.routeList ?: return
         mMap.setOnMyLocationButtonClickListener(this)
-        displayTrack(selectedTrack!!)
-        mMap.addPolyline(
-            PolylineOptions()
-                .clickable(true)
-                .color(R.color.track_color)
-                .addAll(
-                    selectedTrack!!.routeList!!
-                )
-        )
+        if (selectedTrack != null) {
+            displayTrack(selectedTrack!!)
+            mMap.addPolyline(
+                PolylineOptions()
+                    .clickable(true)
+                    .color(R.color.track_color)
+                    .addAll(
+                        routeList
+                    )
+            )
+        }
 
         val builder = LatLngBounds.Builder()
-        for (latLng in selectedTrack!!.routeList!!) {
+        for (latLng in routeList) {
             builder.include(latLng)
         }
 
@@ -113,14 +116,14 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
 
         mMap.addMarker(
             MarkerOptions()
-                .position(selectedTrack!!.routeList!!.first())
+                .position(routeList.first())
                 .title(getString(R.string.start))
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
         )
 
         mMap.addMarker(
             MarkerOptions()
-                .position(selectedTrack!!.routeList!!.last())
+                .position(routeList.last())
                 .title(getString(R.string.finish))
         )
         enableMyLocation()
@@ -136,8 +139,15 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
         return false
     }
 
-    private fun formatDate(date: Long): String {
-        val dateFormat: DateFormat = SimpleDateFormat("ss:mm:HH", Locale.getDefault())
-        return dateFormat.format(date)
+    private fun timeToString(secs: Long): String {
+        val hour = secs / 3600
+        val min = secs / 60 % 60
+        val sec = secs / 1 % 60
+        return String.format("%02d:%02d:%02d", hour, min, sec)
+    }
+
+    private fun formatDistance(distance: Int): String {
+        val result = distance.toDouble() / 1000
+        return result.toString()
     }
 }

@@ -16,9 +16,11 @@ class RecordTrackProvider {
     private val userId = Firebase.auth.uid
 
     fun recordTrackAsync(db: SQLiteDatabase, track: TrackModel): Task<TrackModel> {
-        val date = formatDate(track.startAt!!)
-        val route = Gson().toJsonTree(track.routeList).asJsonArray
-        val args = arrayOf(date, track.distance, track.duration, route, userId, track.firebaseKey)
+            val date = track.startAt?.let { formatDate(it) }
+            val route = Gson().toJsonTree(track.routeList).asJsonArray
+            val args =
+                arrayOf(date, track.distance, track.duration, route, userId, track.firebaseKey)
+
 
         return Task.callInBackground {
             db.execSQL(

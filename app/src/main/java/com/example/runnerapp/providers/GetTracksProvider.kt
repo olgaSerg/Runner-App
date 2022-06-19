@@ -164,6 +164,6 @@ class GetTracksProvider {
     private fun formatTime(time: Long): Date {
         val dateFormat: DateFormat = SimpleDateFormat("HH:mm:ss dd.MM.yyyy", Locale.getDefault())
         val date = dateFormat.format(time)
-        return dateFormat.parse(date)!!
+        return dateFormat.parse(date)
     }
 }

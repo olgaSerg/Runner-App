@@ -106,11 +106,13 @@ class TracksSynchronizer(val db: SQLiteDatabase, val context: Context) {
                 )
                 database.updateChildren(childUpdates)
                 track.firebaseKey = key
-                recordTrackProvider.recordFirebaseKeyAsync(
-                    db,
-                    track.firebaseKey!!,
-                    trackId
-                )
+                if (track.firebaseKey != null) {
+                    recordTrackProvider.recordFirebaseKeyAsync(
+                        db,
+                        track.firebaseKey!!,
+                        trackId
+                    )
+                }
             }
             callback()
         }

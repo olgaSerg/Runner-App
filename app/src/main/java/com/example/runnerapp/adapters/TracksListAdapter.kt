@@ -32,10 +32,10 @@ class TracksListAdapter(
     }
 
     private fun bind(holder: ViewHolder, adapterPosition: Int) {
-        val date = formatDate(tracks[adapterPosition].startAt!!)
+        val date = tracks[adapterPosition].startAt?.let { formatDate(it) }
         holder.dataStart.text = date
-        holder.distance.text = formatDistance(tracks[adapterPosition].distance!!)
-        holder.duration.text = timeToString(tracks[adapterPosition].duration!!)
+        holder.distance.text = tracks[adapterPosition].distance?.let { formatDistance(it) }
+        holder.duration.text = tracks[adapterPosition].duration?.let { timeToString(it) }
 
         holder.itemView.setOnClickListener {
             val selectedTrack = tracks[adapterPosition]

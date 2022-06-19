@@ -153,7 +153,7 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
                 addNotificationListener?.addNotification(it.result)
                 val title = getString(R.string.set_notification)
                 showAlert(time, title) {
-                    loadNotificationsListListener!!.loadNotificationsList()
+                    loadNotificationsListListener?.loadNotificationsList()
                 }
             }, Task.UI_THREAD_EXECUTOR)
         }
@@ -190,9 +190,9 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
             val notificationProvider = NotificationProvider()
             notification.notifyAt = time
             notificationProvider.changeNotification(db, notification).onSuccess ({
-                addNotificationListener!!.addNotification(notification)
+                addNotificationListener?.addNotification(notification)
                 showAlert(time, title) {
-                    loadNotificationsListListener!!.loadNotificationsList()
+                    loadNotificationsListListener?.loadNotificationsList()
                 }
             }, Task.UI_THREAD_EXECUTOR)
         }

@@ -129,8 +129,8 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_in_progress
         val buttonFinish = buttonFinish ?: return
         buttonFinish.setOnClickListener {
             stopTimer()
-
-            if (currentTrack!!.routeList == null || currentTrack!!.routeList!!.isEmpty()) {
+            val currentTrack = currentTrack ?: return@setOnClickListener
+            if (currentTrack.routeList == null || currentTrack.routeList!!.isEmpty()) {
                 AlertDialog.Builder(requireContext())
                     .setMessage(getString(R.string.error_saving_track))
                     .setPositiveButton(
@@ -168,18 +168,19 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_in_progress
         override fun onReceive(context: Context, intent: Intent) {
             routeList = intent.getParcelableArrayListExtra<LatLng>(ROUTE_LIST) as ArrayList<LatLng>
             totalDistance = intent.getDoubleExtra(DISTANCE, 0.0)
-            currentTrack!!.duration = time.toLong() / 1000
-            currentTrack!!.startAt = startTime
-            currentTrack!!.routeList = routeList
-            currentTrack!!.distance = totalDistance.toInt()
+            val currentTrack = currentTrack ?: return
+            currentTrack.duration = time.toLong() / 1000
+            currentTrack.startAt = startTime
+            currentTrack.routeList = routeList
+            currentTrack.distance = totalDistance.toInt()
         }
     }
 
     private fun recordTrackToLocalDb(): Task<TrackModel> {
-        val db = App.instance?.dBHelper?.writableDatabase!!
+        val db = App.instance?.dBHelper?.writableDatabase
 
         val recordTrackProvider = RecordTrackProvider()
-        return recordTrackProvider.recordTrackAsync(db, currentTrack!!)
+        return recordTrackProvider.recordTrackAsync(db!!, currentTrack!!)
     }
 
     private fun getTimeStringFromDouble(time: Double): String {

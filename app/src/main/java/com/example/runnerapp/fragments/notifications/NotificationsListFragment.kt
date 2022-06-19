@@ -71,7 +71,11 @@ class NotificationsListFragment : Fragment(R.layout.fragment_notifications_list)
             val notifications: ArrayList<NotificationModel> = it.result
             notificationsRecyclerView.layoutManager = LinearLayoutManager(activity)
             notificationsRecyclerView.adapter =
-                NotificationsListAdapter(notifications, notificationItemClickListener!!)
+                notificationItemClickListener?.let { notification ->
+                    NotificationsListAdapter(notifications,
+                        notification
+                    )
+                }
         }, Task.UI_THREAD_EXECUTOR)
     }
 }
