@@ -18,6 +18,9 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.maps.model.LatLngBounds
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.*
 
 class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     GoogleMap.OnMyLocationButtonClickListener,
@@ -71,8 +74,12 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     private fun displayTrack(track: TrackModel) {
         val textViewDistance = textViewDistance ?: return
         val textViewDuration = textViewDuration ?: return
-        textViewDistance.text = track.distance.toString()
-        textViewDuration.text = track.duration.toString()
+        if (track.distance != null && track.duration != null) {
+            val distance = track.distance!! / 1000.0
+            val duration = formatDate(track.duration!!)
+            textViewDistance.text = distance.toString()
+            textViewDuration.text = duration
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -127,5 +134,10 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
 
     override fun onMyLocationButtonClick(): Boolean {
         return false
+    }
+
+    private fun formatDate(date: Long): String {
+        val dateFormat: DateFormat = SimpleDateFormat("ss:mm:HH", Locale.getDefault())
+        return dateFormat.format(date)
     }
 }
