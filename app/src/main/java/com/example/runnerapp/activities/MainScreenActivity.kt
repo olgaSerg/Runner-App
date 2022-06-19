@@ -18,9 +18,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import com.example.runnerapp.Notification
-import com.example.runnerapp.R
-import com.example.runnerapp.fragments.*
 import com.example.runnerapp.models.NavigationDrawerItem
 import com.example.runnerapp.models.NotificationModel
 import com.example.runnerapp.models.TrackModel
@@ -29,7 +26,14 @@ import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import android.location.LocationManager
-import com.example.runnerapp.State
+import androidx.core.content.ContentProviderCompat.requireContext
+import bolts.Task
+import com.example.runnerapp.*
+import com.example.runnerapp.fragments.notifications.CHANNEL_ID
+import com.example.runnerapp.fragments.notifications.NotificationFragment
+import com.example.runnerapp.fragments.notifications.NotificationsListFragment
+import com.example.runnerapp.fragments.running.SelectedTrackFragment
+import com.example.runnerapp.fragments.running.TracksListFragment
 
 const val TRACKS_LIST = "tracks_list"
 const val SELECTED_TRACK = "selected_track"
@@ -41,7 +45,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     NotificationsListFragment.OnFabNotificationClickListener,
     NotificationFragment.OnButtonAddNotificationClick,
     NotificationsListFragment.OnNotificationItemClickListener,
-    NotificationFragment.OnPositiveButtonClick, NotificationFragment.OnDeleteNotificationClick {
+    NotificationFragment.LoadNotificationListListener, NotificationFragment.OnDeleteNotificationClick {
 
     private var toolbar: MaterialToolbar? = null
     private var drawerLayout: DrawerLayout? = null
@@ -49,14 +53,14 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     private var itemLogout: LinearLayout? = null
     private var locationManager: LocationManager? = null
     private var geolocationEnabled = false
-    private var fragment = TRACKS_LIST
     private var state = State()
     private val requestPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
             if (isGranted) {
-                loadTracksListFragment()
+                state.fragment = TRACKS_LIST
+                displayState()
             } else {
                 if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                     askUserOpeningAppSettings()
@@ -72,7 +76,6 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         setContentView(R.layout.activity_main_screen)
         createNotificationChannel()
 
-        showFragmentPreview()
 
         initializeFields()
 
@@ -83,11 +86,15 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
 
         if (savedInstanceState != null) {
             state = savedInstanceState.getSerializable(STATE) as State
-            fragment = state.fragment
-            loadFragment(fragment, itemsNavigation)
         } else {
-            sendClickPosition(itemsNavigation[0])
+            state.fragment = TRACKS_LIST
         }
+
+
+
+        showFragmentPreview()
+        displayState()
+
 
         toolbar.setNavigationOnClickListener {
             drawerLayout.openDrawer(Gravity.LEFT)
@@ -102,31 +109,31 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         outState.putSerializable(STATE, state)
     }
 
-    private fun loadFragment(fragment: String, itemsNavigation: ArrayList<NavigationDrawerItem>) {
-        when(fragment) {
-            TRACKS_LIST -> sendClickPosition(itemsNavigation[0])
+    private fun displayState() {
+        when (state.fragment) {
+            TRACKS_LIST -> loadTracksList()
             NOTIFICATION -> loadNotification()
-            NOTIFICATIONS_LIST -> sendClickPosition(itemsNavigation[1])
-            SELECTED_TRACK -> loadSelectedTrack(state)
+            NOTIFICATIONS_LIST -> loadNotificationsList()
+            SELECTED_TRACK -> loadSelectedTrack()
         }
     }
 
     private fun showFragmentPreview() {
         if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED) && checkLocationServiceEnabled()) {
-            loadTracksListFragment()
+                    == PackageManager.PERMISSION_GRANTED) && checkLocationServiceEnabled()
+        ) {
+//            displayState()
         } else {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             checkLocationServiceEnabled()
         }
     }
 
-    private fun loadSelectedTrack(state: State) {
+    private fun loadSelectedTrack() {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.fragment_container, SelectedTrackFragment.newInstance(state))
             commit()
         }
-        state.fragment = SELECTED_TRACK
     }
 
     private fun loadNotification() {
@@ -134,7 +141,6 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
             replace(R.id.fragment_container, NotificationFragment.newInstance(state))
             commit()
         }
-        state.fragment = NOTIFICATION
     }
 
     private fun askUserOpeningAppSettings() {
@@ -159,13 +165,13 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         itemLogout = findViewById(R.id.item_view_logout)
     }
 
-    private fun loadTracksListFragment() {
-        supportFragmentManager.beginTransaction().apply {
-            replace(R.id.fragment_container, TracksListFragment())
-            commit()
-        }
-        state.fragment = TRACKS_LIST
-    }
+//    private fun loadTracksListFragment() {
+//        supportFragmentManager.beginTransaction().apply {
+//            replace(R.id.fragment_container, TracksListFragment())
+//            commit()
+//        }
+//        state.fragment = TRACKS_LIST
+//    }
 
     private fun checkLocationServiceEnabled(): Boolean {
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
@@ -197,11 +203,11 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     private fun setItemLogoutClickListener() {
         val itemLogout = itemLogout ?: return
         itemLogout.setOnClickListener {
-            itemLogout.setBackgroundColor(getColor(R.color.track_color))
+            itemLogout.setBackgroundColor(getColor(R.color.color_checked_item))
 
             Firebase.auth.signOut()
 
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, AuthActivity::class.java)
             startActivity(intent)
         }
     }
@@ -214,12 +220,13 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.main_screen_item -> {
-                    sendClickPosition(itemsNavigation[0])
+                    state.fragment = TRACKS_LIST
                 }
                 R.id.notification_item -> {
-                    sendClickPosition(itemsNavigation[1])
+                    state.fragment = NOTIFICATIONS_LIST
                 }
             }
+            displayState()
             menuItem.isChecked = true
             drawerLayout.close()
             true
@@ -246,16 +253,30 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         )
     }
 
-    private fun sendClickPosition(selectedNavItem: NavigationDrawerItem) {
+    private fun loadTracksList() {
         supportFragmentManager.beginTransaction().apply {
-            replace(R.id.fragment_container, selectedNavItem.fragment)
+            replace(R.id.fragment_container, TracksListFragment.newInstance(state))
             commit()
         }
-        state.fragment = selectedNavItem.name
 
         if (toolbar != null) {
-            toolbar!!.title = selectedNavItem.title
+            toolbar!!.title = "Главный экран"
         }
+        if (drawerLayout != null) {
+            drawerLayout!!.closeDrawer(GravityCompat.START)
+        }
+    }
+
+    override fun loadNotificationsList() {
+        supportFragmentManager.beginTransaction().apply {
+            replace(R.id.fragment_container, NotificationsListFragment())
+            commit()
+        }
+
+        if (toolbar != null) {
+            toolbar!!.title = "Напоминания"
+        }
+
         if (drawerLayout != null) {
             drawerLayout!!.closeDrawer(GravityCompat.START)
         }
@@ -273,25 +294,29 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
 
     override fun onTrackClick(track: TrackModel) {
         state.trackId = track.id
-        supportFragmentManager.beginTransaction().apply {
-            replace(R.id.fragment_container, SelectedTrackFragment.newInstance(state))
-            addToBackStack("SelectedTrack")
-            commit()
-        }
+//        supportFragmentManager.beginTransaction().apply {
+//            replace(R.id.fragment_container, SelectedTrackFragment.newInstance(state))
+//            addToBackStack("SelectedTrack")
+//            commit()
+//        }
         state.fragment = SELECTED_TRACK
+        displayState()
     }
 
     override fun onFabNotificationClick() {
-        supportFragmentManager.beginTransaction().apply {
-            replace(R.id.fragment_container, NotificationFragment.newInstance(state))
-            addToBackStack("Notification")
-            commit()
-        }
+        state.isNewNotification = true
+        state.notification = null
+//        supportFragmentManager.beginTransaction().apply {
+//            replace(R.id.fragment_container, NotificationFragment.newInstance(state))
+//            addToBackStack("Notification")
+//            commit()
+//        }
         state.fragment = NOTIFICATION
+        displayState()
     }
 
     private fun getPendingIntent(notification: NotificationModel): PendingIntent {
-        val intent = Intent(applicationContext, Notification::class.java)
+        val intent = Intent(applicationContext, NotificationReceiver::class.java)
         intent.apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -310,7 +335,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
-            notification.dataTime!!,
+            notification.notifyAt!!,
             pendingIntent
         )
     }
@@ -336,20 +361,15 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     }
 
     override fun onNotificationItemClick(notification: NotificationModel) {
+        state.isNewNotification = false
         state.notification = notification
-        supportFragmentManager.beginTransaction().apply {
-            replace(R.id.fragment_container, NotificationFragment.newInstance(state))
-            addToBackStack("Notification")
-            commit()
-        }
+//        supportFragmentManager.beginTransaction().apply {
+//            replace(R.id.fragment_container, NotificationFragment.newInstance(state))
+//            addToBackStack("Notification")
+//            commit()
+//        }
         state.fragment = NOTIFICATION
-    }
-
-    override fun clickPositiveButton() {
-        supportFragmentManager.beginTransaction().apply {
-            replace(R.id.fragment_container, NotificationsListFragment())
-            commit()
-        }
+        displayState()
     }
 
     override fun onRestart() {

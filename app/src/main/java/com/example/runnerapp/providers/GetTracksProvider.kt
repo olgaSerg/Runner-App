@@ -1,11 +1,15 @@
 package com.example.runnerapp.providers
 
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import bolts.Task
 import com.example.runnerapp.models.TrackModel
 import com.google.android.gms.maps.model.LatLng
+import bolts.Task
+import com.google.android.gms.tasks.Task as FirebaseTask
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
@@ -19,28 +23,22 @@ import java.util.Locale
 import kotlin.collections.HashMap
 
 class GetTracksProvider {
-    private val uid = Firebase.auth.uid
+    private val userId = Firebase.auth.uid
 
     fun getTracksAsync(db: SQLiteDatabase): Task<ArrayList<TrackModel>> {
         return Task.callInBackground {
-            val args = arrayOf(uid)
+            val args = arrayOf(userId)
             val cursor = db.rawQuery(
-                """SELECT id, start_time, distance, route, running_time, firebase_key FROM track WHERE uid = ? ORDER BY start_time DESC""",
+                """
+                SELECT id, start_at, distance, route, running_time, firebase_key
+                FROM track WHERE user_id = ? ORDER BY start_at DESC
+                """,
                 args
             )
             val tracks = arrayListOf<TrackModel>()
-            with(cursor) {
+            with (cursor) {
                 while (moveToNext()) {
-                    val track = TrackModel()
-                    track.id = getInt(getColumnIndexOrThrow("id"))
-                    val date = getString(getColumnIndexOrThrow("start_time"))
-                    val format = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
-                    track.startTime = format.parse(date)
-                    track.distance = getInt(getColumnIndexOrThrow("distance"))
-                    track.duration = getLong(getColumnIndexOrThrow("running_time"))
-                    track.firebaseKey = getString(getColumnIndexOrThrow("firebase_key"))
-                    val jsonString = getString(getColumnIndexOrThrow("route"))
-                    track.routeList = parseJSON(jsonString)
+                    val track = getTrackFromCursor(cursor)
                     tracks.add(track)
                 }
             }
@@ -49,21 +47,35 @@ class GetTracksProvider {
         }
     }
 
-    fun getSelectedTrackAsync(db: SQLiteDatabase, id: Int) : Task<TrackModel> {
-        val args = arrayOf(id.toString(), uid)
-        return Task.callInBackground {
+    private fun getTrackFromCursor(cursor: Cursor): TrackModel {
+        val track = TrackModel()
+        with (cursor) {
+            track.id = getInt(getColumnIndexOrThrow("id"))
+            val date = getString(getColumnIndexOrThrow("start_at"))
+            val format = SimpleDateFormat("yyyy.MM.dd HH:mm:ss", Locale.getDefault())
+            track.startAt = format.parse(date)
+            track.distance = getInt(getColumnIndexOrThrow("distance"))
+            track.duration = getLong(getColumnIndexOrThrow("running_time"))
+            track.firebaseKey = getString(getColumnIndexOrThrow("firebase_key"))
+            val jsonString = getString(getColumnIndexOrThrow("route"))
+            track.routeList = parseJSON(jsonString)
+        }
+        return track
+    }
 
+    fun getTrackAsync(db: SQLiteDatabase, id: Int) : Task<TrackModel> {
+        val args = arrayOf(id.toString())
+
+        return Task.callInBackground {
+            var track: TrackModel?
             val cursor = db.rawQuery(
-                """SELECT distance, running_time, route FROM track WHERE id == ? AND uid = ?""",
+                """SELECT id, start_at, distance, route, running_time, firebase_key 
+                    FROM track WHERE id == ?""",
                     args
             )
-            val track = TrackModel()
-            with(cursor) {
+            with (cursor) {
                 moveToNext()
-                track.distance = getInt(getColumnIndexOrThrow("distance"))
-                track.duration = getLong(getColumnIndexOrThrow("running_time"))
-                val jsonString = getString(getColumnIndexOrThrow("route"))
-                track.routeList = parseJSON(jsonString)
+                track = getTrackFromCursor(cursor)
             }
             cursor.close()
             track
@@ -76,16 +88,17 @@ class GetTracksProvider {
         return gson.fromJson(jsonString, type)
     }
 
-    fun getFirebaseKeyFromDbAsync(db: SQLiteDatabase): Task<ArrayList<String>> {
+    fun getFirebaseKeysListFromDbAsync(db: SQLiteDatabase): Task<ArrayList<String>> {
         return Task.callInBackground {
+            val args = arrayOf(userId.toString())
             val cursor = db.rawQuery(
-                """SELECT firebase_key FROM track""",
-                null
+                """SELECT firebase_key FROM track WHERE user_id = ?""",
+                args
             )
             val localDbKeysList = arrayListOf<String>()
             with(cursor) {
-                while(moveToNext()) {
-                    val key = getString(getColumnIndexOrThrow("firebase_key"))
+                while (moveToNext()) {
+                    val key = getString(getColumnIndexOrThrow("firebase_key")) ?: continue
                     localDbKeysList.add(key)
                 }
             }
@@ -98,10 +111,8 @@ class GetTracksProvider {
         return Task.callInBackground {
             val database = Firebase.database.reference
             val keysListFirebase = arrayListOf<String>()
-            val uid = Firebase.auth.uid
-
-            if (uid != null) {
-                database.child(uid).child("tracks").get().addOnSuccessListener {
+            if (userId != null) {
+                database.child(userId).child("tracks").get().addOnSuccessListener {
                     if (it.value != null) {
                         val dataSnapshot = it.value as HashMap<String, Any>
 
@@ -116,33 +127,32 @@ class GetTracksProvider {
         }
     }
 
-    fun getNewTracksList(
+    fun getNewTracksListFromFirebase(
         keysList: ArrayList<String>,
         callback: (ArrayList<TrackModel>) -> Unit
     ): ArrayList<TrackModel> {
         val database = Firebase.database.reference
         val tracksList = arrayListOf<TrackModel>()
-        val uid = Firebase.auth.uid ?: return tracksList
-        database.child(uid).child("tracks").get().addOnSuccessListener {
-            if (it.value != null) {
-                val dataSnapshot = it.value as HashMap<String, Any>
-                for (key in keysList) {
-                    for (shot in dataSnapshot) {
-                        if (shot.key == key) {
-                            val track = TrackModel()
-                            val hashMap = dataSnapshot.getValue(shot.key) as HashMap<String, Any>
-                            track.duration = hashMap.getValue("duration") as Long
-                            val distance = hashMap.getValue("distance") as Long
-                            track.distance = distance.toInt()
-                            val startTime = hashMap.getValue("startTime") as HashMap<String, Any>
-                            val time = startTime.getValue("time") as Long
-                            track.startTime = formatTime(time)
-                            track.routeList = hashMap.getValue("routeList") as ArrayList<LatLng>
-                            track.firebaseKey = shot.key
-                            tracksList.add(track)
-                        }
-                    }
-                }
+        val userId = userId ?: return tracksList
+
+        val tasks = ArrayList<FirebaseTask<DataSnapshot>>()
+        for (key in keysList) {
+            tasks.add(database.child(userId).child("tracks").child(key).get())
+        }
+
+        Tasks.whenAllSuccess<DataSnapshot>(tasks).addOnSuccessListener { dataSnapshots ->
+            for (dataSnapshot in dataSnapshots) {
+                val track = TrackModel()
+                val hashMap = dataSnapshot.value as HashMap<String, Any>
+                track.duration = hashMap.getValue("duration") as Long
+                val distance = hashMap.getValue("distance") as Long
+                track.distance = distance.toInt()
+                val startTime = hashMap.getValue("startAt") as HashMap<String, Any>
+                val time = startTime.getValue("time") as Long
+                track.startAt = formatTime(time)
+                track.routeList = hashMap.getValue("routeList") as ArrayList<LatLng>
+                track.firebaseKey = dataSnapshot.key
+                tracksList.add(track)
             }
             callback(tracksList)
         }.addOnFailureListener {

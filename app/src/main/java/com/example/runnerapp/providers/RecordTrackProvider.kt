@@ -13,20 +13,21 @@ import java.util.Locale
 
 class RecordTrackProvider {
 
-    private val uid = Firebase.auth.uid
+    private val userId = Firebase.auth.uid
 
-    fun recordTrackExecute(db: SQLiteDatabase, track: TrackModel): Task<TrackModel> {
-        val date = formatDate(track.startTime!!)
+    fun recordTrackAsync(db: SQLiteDatabase, track: TrackModel): Task<TrackModel> {
+        val date = formatDate(track.startAt!!)
         val route = Gson().toJsonTree(track.routeList).asJsonArray
-        val args = arrayOf(date, track.distance, track.duration, route, uid)
+        val args = arrayOf(date, track.distance, track.duration, route, userId, track.firebaseKey)
 
         return Task.callInBackground {
             db.execSQL(
-                """INSERT INTO "track" (start_time, distance, running_time, route, uid)
-                    VALUES (?, ?, ?, ?, ?)
+                """INSERT INTO "track" (start_at, distance, running_time, route, user_id, firebase_key)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 args
             )
+
             val cursor = db.rawQuery("""SELECT MAX(id) AS id FROM track""", null)
             with(cursor) {
                 moveToNext()
@@ -38,10 +39,10 @@ class RecordTrackProvider {
     }
 
     fun recordFirebaseKeyAsync(db: SQLiteDatabase, key: String, id: Int) {
-        val args = arrayOf(key, id, uid)
+        val args = arrayOf(key, id)
         Task.callInBackground {
             db.execSQL(
-                """UPDATE "track" SET firebase_key = ? WHERE id == ? AND uid = ?
+                """UPDATE "track" SET firebase_key = ? WHERE id == ?
                 """,
                 args
             )
@@ -51,27 +52,13 @@ class RecordTrackProvider {
     fun recordNewTracksFromFirebase(db: SQLiteDatabase, tracksList: ArrayList<TrackModel>): Task<Unit> {
         return Task.callInBackground {
             for (track in tracksList) {
-                val date = formatDate(track.startTime!!)
-                val route = Gson().toJsonTree(track.routeList).asJsonArray
-                val args = arrayOf(date, track.distance, track.duration, route, track.firebaseKey, uid)
-                db.execSQL(
-                    """INSERT INTO "track" (start_time, distance, running_time, route, firebase_key, uid)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                    args
-                )
-                val cursor = db.rawQuery("""SELECT MAX(id) AS id FROM track""", null)
-                with(cursor) {
-                    moveToNext()
-                    track.id = getInt(getColumnIndexOrThrow("id"))
-                }
-                cursor.close()
+                recordTrackAsync(db, track)
             }
         }
     }
 
     private fun formatDate(date: Date): String {
-        val dateFormat: DateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
+        val dateFormat: DateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm:ss", Locale.getDefault())
         return dateFormat.format(date)
     }
 }

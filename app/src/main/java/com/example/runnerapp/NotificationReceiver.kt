@@ -8,10 +8,9 @@ import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.runnerapp.activities.RunningActivity
-import com.example.runnerapp.fragments.CHANNEL_ID
-import com.example.runnerapp.fragments.NOTIFICATION_ID
+import com.example.runnerapp.fragments.notifications.CHANNEL_ID
 
-class Notification : BroadcastReceiver() {
+class NotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val resultIntent = Intent(context, RunningActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(

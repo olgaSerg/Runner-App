@@ -5,8 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.runnerapp.R
 import com.example.runnerapp.State
-import com.example.runnerapp.fragments.LoginFragment
-import com.example.runnerapp.fragments.RegistrationFragment
+import com.example.runnerapp.fragments.authentication.LoginFragment
+import com.example.runnerapp.fragments.authentication.RegistrationFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -15,9 +15,8 @@ const val LOGIN = "login"
 const val REGISTRATION = "registration"
 const val STATE = "state"
 
-
-class MainActivity : AppCompatActivity(), RegistrationFragment.OnButtonLoginClickListener,
-    LoginFragment.OnButtonRegistrationClickListener, LoginFragment.OnButtonLoginClickListener,
+class AuthActivity : AppCompatActivity(), RegistrationFragment.OnLoginLinkClickListener,
+    LoginFragment.OnRegistrationLinkClick, LoginFragment.OnLoginButtonClickListener,
     RegistrationFragment.OnSignUpClickListener {
 
     private lateinit var auth: FirebaseAuth
@@ -29,6 +28,10 @@ class MainActivity : AppCompatActivity(), RegistrationFragment.OnButtonLoginClic
 
         auth = Firebase.auth
 
+        // TODO: Remove test credentials
+        state.email = "olga@gmail.com"
+        state.password = "123123"
+
         if (savedInstanceState != null) {
             state = savedInstanceState.getSerializable(STATE) as State
         }
@@ -37,18 +40,18 @@ class MainActivity : AppCompatActivity(), RegistrationFragment.OnButtonLoginClic
         if (currentUser != null) {
             loadMainScreenActivity()
         } else {
-            restoreState()
+            displayState()
         }
     }
 
-    override fun onClickButtonLoginReference() {
-        state = State()
-        loadLoginFragment(state)
+    override fun onLoginLinkClick() {
+        state.fragment = LOGIN
+        displayState()
     }
 
-    override fun onClickButtonRegistrationReference() {
-        state = State()
-        loadRegistrationFragment(state)
+    override fun onRegistrationLinkClick() {
+        state.fragment = REGISTRATION
+        displayState()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -62,7 +65,6 @@ class MainActivity : AppCompatActivity(), RegistrationFragment.OnButtonLoginClic
             replace(R.id.fragment_container, RegistrationFragment.newInstance(state))
             commit()
         }
-        state.fragment = REGISTRATION
     }
 
     private fun loadLoginFragment(state: State) {
@@ -71,10 +73,9 @@ class MainActivity : AppCompatActivity(), RegistrationFragment.OnButtonLoginClic
             replace(R.id.fragment_container, LoginFragment.newInstance(state))
             commit()
         }
-        state.fragment = LOGIN
     }
 
-    override fun onClickButtonLogin() {
+    override fun onLoginButtonClick() {
         val intent = Intent(this, MainScreenActivity::class.java)
         startActivity(intent)
     }
@@ -89,15 +90,10 @@ class MainActivity : AppCompatActivity(), RegistrationFragment.OnButtonLoginClic
         startActivity(intent)
     }
 
-    private fun restoreState() {
+    private fun displayState() {
         when (state.fragment) {
             LOGIN -> loadLoginFragment(state)
             REGISTRATION-> loadRegistrationFragment(state)
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
     }
 }

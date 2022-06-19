@@ -9,7 +9,7 @@ import bolts.Task
 import com.example.runnerapp.R
 import java.lang.Thread.sleep
 
-class FirstScreenActivity : AppCompatActivity() {
+class InitActivity : AppCompatActivity() {
 
     private var imageViewLogo: ImageView? = null
 
@@ -29,7 +29,7 @@ class FirstScreenActivity : AppCompatActivity() {
         Task.callInBackground {
             sleep(2000)
         }.onSuccess {
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, AuthActivity::class.java)
             startActivity(intent)
         }
     }

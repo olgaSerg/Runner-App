@@ -14,7 +14,6 @@ class App : Application() {
         instance = this
         dBHelper = DBHelper(this)
         db = dBHelper?.writableDatabase
-
     }
 
     companion object {

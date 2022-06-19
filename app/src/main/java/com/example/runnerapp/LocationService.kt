@@ -14,7 +14,6 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.runnerapp.activities.FASTEST_INTERVAL
-import com.example.runnerapp.fragments.CHANNEL_ID
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 
@@ -38,7 +37,7 @@ class LocationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        startForegroundService()
+//        startForegroundService()
         return START_NOT_STICKY
     }
 
@@ -67,78 +66,75 @@ class LocationService : Service() {
         override fun onLocationResult(result: LocationResult) {
             super.onLocationResult(result)
             val locationList = result.locations
-            if (locationList.isNotEmpty()) {
-                val location = locationList.last()
-                if (routeList.isEmpty()) {
-                    val newLocation = LatLng(location.latitude, location.longitude)
-                    routeList.add(newLocation)
-                } else {
-                    val lastLocation = routeList[routeList.lastIndex]
-                    val newLocation = LatLng(location.latitude, location.longitude)
-                    if (lastLocation != newLocation) {
-                        val resultDistance: FloatArray = floatArrayOf(0.0F)
-                        Location.distanceBetween(
-                            lastLocation.latitude,
-                            lastLocation.longitude,
-                            newLocation.latitude,
-                            newLocation.longitude,
-                            resultDistance
-                        )
-                        routeList.add(newLocation)
-                        totalDistance += resultDistance[0]
-                    }
-                }
-                Log.d(
-                    "NEW LOC",
-                    "${result.locations[0].latitude}, ${result.locations[0].longitude}"
-                )
-                Log.d("NEW DISTANCE", totalDistance.toString())
+            if (locationList.isEmpty()) {
+                return
             }
+            val location = locationList.last()
+            if (routeList.isEmpty()) {
+                val newLocation = LatLng(location.latitude, location.longitude)
+                routeList.add(newLocation)
+                sendBroadcast()
+            } else {
+                val lastLocation = routeList.last()
+                val newLocation = LatLng(location.latitude, location.longitude)
+                    val resultDistance: FloatArray = floatArrayOf(0.0F)
+                    Location.distanceBetween(
+                        lastLocation.latitude,
+                        lastLocation.longitude,
+                        newLocation.latitude,
+                        newLocation.longitude,
+                        resultDistance
+                    )
+                if (resultDistance[0] >= 5) {
+                    routeList.add(newLocation)
+                    totalDistance += resultDistance[0]
+                    sendBroadcast()
+                }
+            }
+            Log.d(
+                "NEW LOC",
+                "${result.locations[0].latitude}, ${result.locations[0].longitude}"
+            )
+            Log.d("NEW DISTANCE", totalDistance.toString())
         }
     }
 
-    private fun startForegroundService() {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            createNotificationChannel()
-//        }
-
-        val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setAutoCancel(false)
-            .setOngoing(true)
-//            .setSmallIcon(R.drawable.ic_directions_run_black_24dp)
-            .setContentTitle("Running App")
-            .setContentText("00:00:00")
-//            .setContentIntent(getRunningActivityPendingIntent())
-        startForeground(NOTIFICATION_ID, notificationBuilder.build())
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel() {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            val name = "CHANNEL"
-//            val descriptionText = "IT'S A CHANNEL"
-//            val importance = NotificationManager.IMPORTANCE_DEFAULT
-//            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-//                description = descriptionText
-//            }
-//            val notificationManager: NotificationManager =
-//                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-//            notificationManager.createNotificationChannel(channel)
-//        }
-
-//        val channel = NotificationChannel(
-//            NOTIFICATION_CHANNEL_ID,
-//            NOTIFICATION_CHANNEL_NAME,
-//            NotificationManager.IMPORTANCE_LOW
-//        )
-//        notificationManager.createNotificationChannel(channel)
-    }
-
-    override fun onDestroy() {
+    private fun sendBroadcast() {
         val intent = Intent(LOCATION_UPDATE)
         intent.putParcelableArrayListExtra(ROUTE_LIST, routeList)
         intent.putExtra(DISTANCE, totalDistance)
         sendBroadcast(intent)
+    }
+
+    private fun startForegroundService() {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE)
+                as NotificationManager
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel(notificationManager)
+        }
+
+        val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setAutoCancel(false)
+            .setOngoing(true)
+            .setContentTitle("Running App")
+            .setContentText("00:00:00")
+
+        startForeground(NOTIFICATION_ID, notificationBuilder.build())
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel(notificationManager: NotificationManager) {
+        val channel = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            NOTIFICATION_CHANNEL_NAME,
+            NotificationManager.IMPORTANCE_LOW
+        )
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    override fun onDestroy() {
+        sendBroadcast()
         fusedLocationProviderClient?.removeLocationUpdates(locationCallback)
         super.onDestroy()
     }

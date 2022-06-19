@@ -1,4 +1,4 @@
-package com.example.runnerapp.fragments
+package com.example.runnerapp.fragments.authentication
 
 import android.content.Context
 import android.os.Bundle
@@ -12,7 +12,6 @@ import com.example.runnerapp.R
 import com.example.runnerapp.State
 import com.example.runnerapp.activities.STATE
 import com.google.android.material.textfield.TextInputLayout
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -22,16 +21,16 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
     private var firstName: TextInputLayout? = null
     private var lastName: TextInputLayout? = null
     private var password: TextInputLayout? = null
-    private var confirmPassword: TextInputLayout? = null
+    private var passwordConfirmation: TextInputLayout? = null
     private var buttonRegistration: Button? = null
-    private var buttonLogin: Button? = null
-    private var buttonLoginClickListener: OnButtonLoginClickListener? = null
-    private lateinit var auth: FirebaseAuth
+    private var loginButton: Button? = null
+    private var loginLinkClickListener: OnLoginLinkClickListener? = null
+    private var auth = Firebase.auth
     private var state: State? = null
     private var signUpClickListener: OnSignUpClickListener? = null
 
-    interface OnButtonLoginClickListener {
-        fun onClickButtonLoginReference()
+    interface OnLoginLinkClickListener {
+        fun onLoginLinkClick()
     }
 
     interface OnSignUpClickListener {
@@ -50,10 +49,11 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        buttonLoginClickListener = try {
-            activity as OnButtonLoginClickListener
+
+        loginLinkClickListener = try {
+            activity as OnLoginLinkClickListener
         } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnButtonLoginClickListener")
+            throw ClassCastException("$activity must implement OnLoginLinkClickListener")
         }
 
         signUpClickListener = try {
@@ -70,20 +70,18 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
         state = arguments?.getSerializable(STATE) as State
 
-        val buttonLogin = buttonLogin ?: return
+        val loginButton = loginButton ?: return
         val state = state ?: return
 
         displayState()
 
-        if (state.isTaskRegistrationStarted) {
-            buttonRegistration?.callOnClick()
+        setButtonRegistrationClickListener()
+        loginButton.setOnClickListener {
+            loginLinkClickListener?.onLoginLinkClick()
         }
 
-        state.isTaskRegistrationStarted = !buttonLogin.isEnabled
-
-        setButtonRegistrationClickListener()
-        buttonLogin.setOnClickListener {
-            buttonLoginClickListener?.onClickButtonLoginReference()
+        if (state.isTaskRegistrationStarted) {
+            buttonRegistration?.callOnClick()
         }
     }
 
@@ -92,9 +90,9 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         firstName = view.findViewById(R.id.first_name_registration)
         lastName = view.findViewById(R.id.last_name_registration)
         password = view.findViewById(R.id.password_registration)
-        confirmPassword = view.findViewById(R.id.confirm_password)
+        passwordConfirmation = view.findViewById(R.id.confirm_password)
         buttonRegistration = view.findViewById(R.id.button_registration)
-        buttonLogin = view.findViewById(R.id.button_login_registration_screen)
+        loginButton = view.findViewById(R.id.button_login_registration_screen)
     }
 
     private fun setButtonRegistrationClickListener() {
@@ -103,21 +101,21 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         val firstName = firstName ?: return
         val lastName = lastName ?: return
         val password = password ?: return
-        val confirmPassword = confirmPassword ?: return
-        val list = listOf(email, firstName, lastName, password, confirmPassword)
+        val passwordConfirmation = passwordConfirmation ?: return
+        val fields = listOf(email, firstName, lastName, password, passwordConfirmation)
 
         buttonRegistration.setOnClickListener {
             state?.isTaskRegistrationStarted = true
             buttonRegistration.isEnabled = false
             val validationResults = listOf(
-                checkPasswordsMatch(password, confirmPassword),
-                checkFields(list),
+                checkPasswordsMatch(password, passwordConfirmation),
+                checkFields(fields),
             )
 
             val isFormValid = validationResults.all { it }
 
             if (isFormValid) {
-                createUser(email)
+                registerUser()
             } else {
                 state?.isTaskRegistrationStarted = false
                 buttonRegistration.isEnabled = true
@@ -156,11 +154,13 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         field.error = "Заполните пустое поле"
     }
 
-    private fun createUser(email: TextInputLayout) {
+    private fun registerUser() {
+        val state = state ?: return
+
         auth = Firebase.auth
 
         auth.createUserWithEmailAndPassword(
-            email.editText?.text.toString(),
+            email?.editText?.text.toString(),
             password?.editText?.text.toString()
         )
             .addOnCompleteListener(requireActivity()) { task ->
@@ -172,7 +172,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                     Toast.makeText(requireContext(), "Authentication failed.",
                         Toast.LENGTH_SHORT).show()
                 }
-                state?.isTaskRegistrationStarted = false
+                state.isTaskRegistrationStarted = false
                 buttonRegistration?.isEnabled = true
             }
     }
@@ -182,16 +182,18 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         val state = state ?: return
         state.email = email?.editText?.text.toString()
         state.password = password?.editText?.text.toString()
-        state.confirmPassword = confirmPassword?.editText?.text.toString()
+        state.passwordConfirmation = passwordConfirmation?.editText?.text.toString()
         state.firstName = firstName?.editText?.text.toString()
         state.lastName = lastName?.editText?.text.toString()
     }
 
     private fun displayState() {
         val state = state ?: return
+        val loginButton = loginButton ?: return
+        state.isTaskRegistrationStarted = !loginButton.isEnabled
         email?.editText?.setText(state.email)
         password?.editText?.setText(state.password)
-        confirmPassword?.editText?.setText(state.confirmPassword)
+        passwordConfirmation?.editText?.setText(state.passwordConfirmation)
         firstName?.editText?.setText(state.firstName)
         lastName?.editText?.setText(state.lastName)
     }

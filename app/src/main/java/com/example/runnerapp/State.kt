@@ -1,21 +1,32 @@
 package com.example.runnerapp
 
 import com.example.runnerapp.models.NotificationModel
+import com.example.runnerapp.models.TrackModel
 import java.io.Serializable
 import java.util.*
 
+// TODO: Split into separate states
 class State(
+    var fragment: String = "login",
+
+    // auth
     var email: String = "",
     var firstName: String? = null,
     var lastName: String? = null,
     var password: String = "",
-    var confirmPassword: String? = null,
+    var passwordConfirmation: String? = null,
     var isTaskRegistrationStarted: Boolean = false,
     var isTaskLoginStarted: Boolean = false,
-    var fragment: String = "login",
-    var trackId: Int? = null,
+
+    // notifications
     var notification: NotificationModel? = null,
+    var isNewNotification: Boolean = false,
+
+    // running
+    var trackId: Int? = null,
+    var timeStart: Date? = null,
     var runningTime: String? = null,
     var totalDistance: Double? = null,
-    var timeStart: Date? = null
+    var isInitialSynchronizationDone: Boolean = false,
+    var currentTrack: TrackModel? = null
 ) : Serializable

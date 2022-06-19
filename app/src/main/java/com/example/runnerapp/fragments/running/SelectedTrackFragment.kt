@@ -1,4 +1,4 @@
-package com.example.runnerapp.fragments
+package com.example.runnerapp.fragments.running
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -25,7 +25,7 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
 
     private var textViewDistance: TextView? = null
     private var textViewDuration: TextView? = null
-    private lateinit var mMap: GoogleMap
+    private var mMap: GoogleMap? = null
     private var selectedTrack: TrackModel? = null
     private var state: State? = null
 
@@ -49,16 +49,16 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
         getSelectedTrack(onMapReadyCallback)
     }
 
-    private fun getSelectedTrack(onMapReadyCallback: SelectedTrackFragment) {
+    private fun getSelectedTrack(onMapReadyCallback: OnMapReadyCallback) {
         state = arguments?.getSerializable(STATE) as State
         val db = App.instance?.db ?: return
         val tracksProvider = GetTracksProvider()
         val state = state ?: return
         val selectedTrackId = state.trackId
         if (selectedTrackId != null) {
-            tracksProvider.getSelectedTrackAsync(db, selectedTrackId).onSuccess({
+            state.trackId = selectedTrackId
+            tracksProvider.getTrackAsync(db, selectedTrackId).onSuccess({
                 selectedTrack = it.result
-                state.trackId = it.result.id
             }, Task.BACKGROUND_EXECUTOR).onSuccess({
                 val mapFragment: SupportMapFragment = childFragmentManager
                     .findFragmentById(R.id.map) as SupportMapFragment
@@ -66,6 +66,7 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
             }, Task.UI_THREAD_EXECUTOR)
         }
     }
+
 
     private fun displayTrack(track: TrackModel) {
         val textViewDistance = textViewDistance ?: return
@@ -77,6 +78,7 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     @SuppressLint("MissingPermission")
     override fun onMapReady(map: GoogleMap) {
         mMap = map
+        val mMap = mMap ?: return
         mMap.setOnMyLocationButtonClickListener(this)
         displayTrack(selectedTrack!!)
         mMap.addPolyline(
@@ -123,6 +125,7 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
 
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
+        val mMap = mMap ?: return
         mMap.isMyLocationEnabled = true
     }
 

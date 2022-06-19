@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.runnerapp.R
-import com.example.runnerapp.fragments.NotificationsListFragment
+import com.example.runnerapp.fragments.notifications.NotificationsListFragment
 import com.example.runnerapp.models.NotificationModel
 import java.text.DateFormat
 import java.text.SimpleDateFormat
@@ -36,9 +36,10 @@ class NotificationsListAdapter(
     }
 
     private fun bind(holder: ViewHolder, adapterPosition: Int) {
-        if (notifications[adapterPosition].dataTime != null) {
-            val time = formatTime(notifications[adapterPosition].dataTime!!)
-            val date = formatDate(notifications[adapterPosition].dataTime!!)
+        val position = notifications[adapterPosition]
+        if (position.notifyAt != null) {
+            val time = formatTime(position.notifyAt!!)
+            val date = formatDate(position.notifyAt!!)
             holder.time.text = time
             holder.date.text = date
         }

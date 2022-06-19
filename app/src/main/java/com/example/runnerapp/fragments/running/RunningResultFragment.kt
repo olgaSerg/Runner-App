@@ -1,4 +1,4 @@
-package com.example.runnerapp.fragments
+package com.example.runnerapp.fragments.running
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -8,18 +8,17 @@ import com.example.runnerapp.R
 const val TRACK_DISTANCE = "track_distance"
 const val TIME = "time"
 
-class ResultScreenFragment : Fragment(R.layout.fragment_result_running_screen) {
+class RunningResultFragment : Fragment(R.layout.fragment_result_running_screen) {
 
     private var textViewDuration: TextView? = null
     private var textViewDistance: TextView? = null
 
-
     companion object {
-        fun newInstance(time: String, trackDistance: Double): ResultScreenFragment {
+        fun newInstance(time: String, trackDistance: Double): RunningResultFragment {
             val args = Bundle()
             args.putDouble(TRACK_DISTANCE, trackDistance)
             args.putString(TIME, time)
-            val resultScreenFragment = ResultScreenFragment()
+            val resultScreenFragment = RunningResultFragment()
             resultScreenFragment.arguments = args
             return resultScreenFragment
         }

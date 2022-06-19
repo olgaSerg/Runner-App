@@ -1,4 +1,4 @@
-package com.example.runnerapp.fragments
+package com.example.runnerapp.fragments.notifications
 
 import android.content.Context
 import android.os.Bundle
@@ -30,6 +30,7 @@ class NotificationsListFragment : Fragment(R.layout.fragment_notifications_list)
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+
         fabNotificationClickListener = try {
             activity as OnFabNotificationClickListener
         } catch (e: ClassCastException) {
@@ -64,6 +65,7 @@ class NotificationsListFragment : Fragment(R.layout.fragment_notifications_list)
     private fun displayNotificationsList() {
         val db = App.instance?.db ?: return
         val notificationsRecyclerView = notificationsRecyclerView ?: return
+
         val notificationProvider = NotificationProvider()
         notificationProvider.getNotificationsAsync(db).onSuccess({
             val notifications: ArrayList<NotificationModel> = it.result

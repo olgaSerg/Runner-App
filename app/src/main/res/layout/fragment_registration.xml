@@ -81,7 +81,7 @@
             app:errorEnabled="true"
             android:ems="10"
             android:hint="@string/hint_password"
-            android:inputType="textPassword"
+            app:endIconMode="password_toggle"
             app:layout_constraintBottom_toTopOf="@+id/confirm_password"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -89,7 +89,8 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -103,7 +104,7 @@
             app:errorEnabled="true"
             android:ems="10"
             android:hint="@string/hint_confirm_password"
-            android:inputType="textPassword"
+            app:endIconMode="password_toggle"
             app:layout_constraintBottom_toTopOf="@id/button_registration"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -111,7 +112,8 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <Button

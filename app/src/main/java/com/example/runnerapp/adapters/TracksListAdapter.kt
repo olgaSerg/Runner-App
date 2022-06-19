@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.runnerapp.R
-import com.example.runnerapp.fragments.TracksListFragment
+import com.example.runnerapp.fragments.running.TracksListFragment
 import com.example.runnerapp.models.TrackModel
 import java.text.DateFormat
 import java.text.SimpleDateFormat
@@ -33,7 +33,7 @@ class TracksListAdapter(
     }
 
     private fun bind(holder: ViewHolder, adapterPosition: Int) {
-        val date = formatDate(tracks[adapterPosition].startTime!!)
+        val date = formatDate(tracks[adapterPosition].startAt!!)
         holder.dataStart.text = date
         holder.distance.text = formatDistance(tracks[adapterPosition].distance!!)
         holder.duration.text = timeToString(tracks[adapterPosition].duration!!)

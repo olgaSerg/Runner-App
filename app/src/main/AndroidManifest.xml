@@ -19,13 +19,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RunnerApp">
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".activities.AuthActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan">
         </activity>
 
         <receiver
-            android:name=".Notification"
+            android:name=".NotificationReceiver"
             android:enabled="true" />
 
         <meta-data
@@ -39,7 +39,7 @@
             android:name=".activities.MainScreenActivity"
             android:exported="true" />
         <activity
-            android:name=".activities.FirstScreenActivity"
+            android:name=".activities.InitActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

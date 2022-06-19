@@ -1,4 +1,4 @@
-package com.example.runnerapp.fragments
+package com.example.runnerapp.fragments.running
 
 import android.content.Context
 import android.os.Bundle
@@ -9,18 +9,18 @@ import com.example.runnerapp.R
 
 class RunningStartFragment : Fragment(R.layout.fragment_running_start) {
 
-    private var buttonStartClick: OnButtonStartClick? = null
+    private var startButtonClick: OnStartButtonClick? = null
 
-    interface OnButtonStartClick {
-        fun clickButtonStart()
+    interface OnStartButtonClick {
+        fun onStartButtonClick()
     }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        buttonStartClick = try {
-            activity as OnButtonStartClick
+        startButtonClick = try {
+            activity as OnStartButtonClick
         } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnButtonStartClick")
+            throw ClassCastException("$activity must implement OnStartButtonClick")
         }
     }
 
@@ -28,7 +28,7 @@ class RunningStartFragment : Fragment(R.layout.fragment_running_start) {
 
         val button: Button = view.findViewById(R.id.button_start)
         button.setOnClickListener {
-            buttonStartClick?.clickButtonStart()
+            startButtonClick?.onStartButtonClick()
         }
     }
 }

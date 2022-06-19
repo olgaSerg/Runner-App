@@ -4,5 +4,5 @@ import java.io.Serializable
 
 class NotificationModel(
     var id: Int? = null,
-    var dataTime: Long? = null
+    var notifyAt: Long? = null
 ) : Serializable

@@ -31,6 +31,5 @@ class TimerService : Service() {
 
     companion object {
         const val TIMER_UPDATED = "timerUpdated"
-        const val TIME_EXTRA = "timeExtra"
     }
 }

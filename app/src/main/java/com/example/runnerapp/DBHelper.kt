@@ -9,13 +9,13 @@ const val DB_VERSION = 1
 const val TRACKS_TABLE_NAME = "track"
 const val NOTIFICATIONS_TABLE_NAME = "notification"
 const val ID = "id"
-const val START_TIME = "start_time"
+const val START_TIME = "start_at"
 const val DISTANCE = "distance"
 const val RUNNING_TIME = "running_time"
 const val ROUTE = "route"
 const val FIREBASE_KEY = "firebase_key"
-const val DATE_TIME = "date_time"
-const val UID = "uid"
+const val DATE_TIME = "notify_at"
+const val UID = "user_id"
 
 class DBHelper(context: Context) :
     SQLiteOpenHelper(context, "TracksDB", null, DB_VERSION) {

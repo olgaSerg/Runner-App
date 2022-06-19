@@ -7,18 +7,18 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
 class NotificationProvider {
-    private val uid = Firebase.auth.uid
+    private val userId = Firebase.auth.uid
 
     fun recordNotification(
         db: SQLiteDatabase,
         notification: NotificationModel
     ): Task<NotificationModel> {
-        val date = notification.dataTime
-        val args = arrayOf(date, uid)
+        val date = notification.notifyAt
+        val args = arrayOf(date, userId)
 
         return Task.callInBackground {
             db.execSQL(
-                """INSERT INTO "notification" (date_time, uid)
+                """INSERT INTO "notification" (notify_at, user_id)
                     VALUES (?, ?)
                 """,
                 args
@@ -36,9 +36,9 @@ class NotificationProvider {
 
     fun getNotificationsAsync(db: SQLiteDatabase): Task<ArrayList<NotificationModel>> {
         return Task.callInBackground {
-            val args = arrayOf(uid)
+            val args = arrayOf(userId)
             val cursor = db.rawQuery(
-                """SELECT id, date_time FROM notification WHERE uid = ? ORDER BY date_time DESC""",
+                """SELECT id, notify_at FROM notification WHERE user_id = ? ORDER BY notify_at DESC""",
                 args
             )
             val notifications = arrayListOf<NotificationModel>()
@@ -46,7 +46,7 @@ class NotificationProvider {
                 while (moveToNext()) {
                     val notification = NotificationModel()
                     notification.id = getInt(getColumnIndexOrThrow("id"))
-                    notification.dataTime = getLong(getColumnIndexOrThrow("date_time"))
+                    notification.notifyAt = getLong(getColumnIndexOrThrow("notify_at"))
                     notifications.add(notification)
                 }
             }
@@ -55,14 +55,14 @@ class NotificationProvider {
         }
     }
 
-    fun changeNotification(db: SQLiteDatabase, notification: NotificationModel) {
-        val date = notification.dataTime
+    fun changeNotification(db: SQLiteDatabase, notification: NotificationModel): Task<Unit> {
+        val date = notification.notifyAt
         val id = notification.id
-        val args = arrayOf(date, uid, id)
+        val args = arrayOf(date, userId, id)
 
-        Task.callInBackground {
+        return Task.callInBackground {
             db.execSQL(
-                """UPDATE notification SET date_time = ? WHERE uid = ? AND id = ?
+                """UPDATE notification SET notify_at = ? WHERE user_id = ? AND id = ?
                 """,
                 args
             )

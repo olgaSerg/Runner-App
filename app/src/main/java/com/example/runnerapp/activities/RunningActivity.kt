@@ -7,9 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import com.example.runnerapp.*
-import com.example.runnerapp.fragments.RunningFinishFragment
-import com.example.runnerapp.fragments.RunningStartFragment
-import com.example.runnerapp.fragments.ResultScreenFragment
+import com.example.runnerapp.fragments.running.RunningInProgressFragment
+import com.example.runnerapp.fragments.running.RunningStartFragment
+import com.example.runnerapp.fragments.running.RunningResultFragment
 import com.google.android.gms.location.LocationServices
 
 const val FASTEST_INTERVAL: Long = 2000
@@ -17,10 +17,9 @@ const val START_SCREEN = "start"
 const val FINISH_SCREEN = "finish"
 const val RESULT_SCREEN = "result"
 
-class RunningActivity : AppCompatActivity(), RunningStartFragment.OnButtonStartClick,
-    RunningFinishFragment.OnButtonFinishClick, RunningFinishFragment.OnErrorDialogClick {
+class RunningActivity : AppCompatActivity(), RunningStartFragment.OnStartButtonClick,
+    RunningInProgressFragment.OnButtonFinishClick, RunningInProgressFragment.OnErrorDialogClick {
 
-    private var containerNumber = 1
     private var state = State()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +44,7 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnButtonStartC
     private fun loadFragments(state: State) {
         when (state.fragment) {
             START_SCREEN -> loadStartRunningFragment()
-            FINISH_SCREEN -> loadFinishRunningFragment()
+            FINISH_SCREEN -> loadRunningInProgressFragment()
             RESULT_SCREEN -> loadResultRunningFragment()
         }
     }
@@ -62,7 +61,7 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnButtonStartC
             .commit()
     }
 
-    private fun loadFinishRunningFragment() {
+    private fun loadRunningInProgressFragment() {
         supportFragmentManager.beginTransaction()
             .setCustomAnimations(
                 R.anim.card_flip_right_in,
@@ -70,7 +69,7 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnButtonStartC
                 R.anim.card_flip_left_in,
                 R.anim.card_flip_left_out
             )
-            .replace(R.id.fragment_container, RunningFinishFragment.newInstance(state))
+            .replace(R.id.fragment_container, RunningInProgressFragment.newInstance(state))
             .commit()
     }
 
@@ -85,7 +84,7 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnButtonStartC
                 )
                 .replace(
                     R.id.fragment_container,
-                    ResultScreenFragment.newInstance(
+                    RunningResultFragment.newInstance(
                         state.runningTime!!,
                         state.totalDistance!!
                     )
@@ -95,8 +94,7 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnButtonStartC
     }
 
     @SuppressLint("MissingPermission")
-    override fun clickButtonStart() {
-        containerNumber = 1
+    override fun onStartButtonClick() {
         state.fragment = FINISH_SCREEN
         loadFragments(state)
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -107,7 +105,6 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnButtonStartC
     }
 
     override fun clickFinishButton(time: String, totalDistance: Double) {
-        containerNumber = 2
         state.fragment = RESULT_SCREEN
         state.runningTime = time
         state.totalDistance = totalDistance
