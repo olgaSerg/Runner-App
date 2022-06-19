@@ -1,14 +1,11 @@
 package com.example.runnerapp.fragments.running
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Button
@@ -16,23 +13,15 @@ import android.widget.TextView
 import com.example.runnerapp.*
 import com.example.runnerapp.R
 import com.example.runnerapp.models.TrackModel
-import com.example.runnerapp.providers.GetTracksProvider
 import com.example.runnerapp.providers.RecordTrackProvider
 import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
-import java.util.*
+import java.util.Date
 import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.widget.Toast
 import bolts.Task
 import com.example.runnerapp.activities.STATE
 
-class RunningInProgressFragment : Fragment(R.layout.fragment_running_finish) {
+class RunningInProgressFragment : Fragment(R.layout.fragment_running_in_progress) {
 
     private var textViewTimer: TextView? = null
     private var buttonFinish: Button? = null
@@ -45,7 +34,7 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_finish) {
     private var serviceLocationIntent: Intent? = null
     private var errorDialogClick: OnErrorDialogClick? = null
     private var state: State? = null
-
+    private var currentTrack: TrackModel? = null
 
     interface OnButtonFinishClick {
         fun clickFinishButton(time: String, totalDistance: Double)
@@ -96,10 +85,14 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_finish) {
         if (state.timeStart == null) {
             startTime = Date()
             state.timeStart = startTime
-            state.currentTrack = TrackModel()
+            currentTrack = TrackModel()
             startTimer()
         } else {
             startTime = state.timeStart!!
+        }
+
+        if (currentTrack == null) {
+            currentTrack = TrackModel()
         }
 
         setButtonFinishClickListener()
@@ -137,9 +130,9 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_finish) {
         buttonFinish.setOnClickListener {
             stopTimer()
 
-            if (state!!.currentTrack!!.routeList!!.isEmpty()) {
+            if (currentTrack!!.routeList == null || currentTrack!!.routeList!!.isEmpty()) {
                 AlertDialog.Builder(requireContext())
-                    .setMessage("Трек не будет сохранен, так как маршрут отсутсвует")
+                    .setMessage(getString(R.string.error_saving_track))
                     .setPositiveButton(
                         "ок"
                     ) { dialog, id -> errorDialogClick?.onErrorDialogClick() }
@@ -157,9 +150,6 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_finish) {
                     TracksSynchronizer(db, this@RunningInProgressFragment.requireContext())
                 tracksSynchronizer.synchronizeTracks { }
             }
-
-            Log.v("!!!!", "click finish")
-//            buttonFinishClick?.clickFinishButton(getTimeStringFromDouble(time), totalDistance)
         }
     }
 
@@ -176,13 +166,12 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_finish) {
 
     private var updateLocation: BroadcastReceiver? = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            val state = state ?: return
             routeList = intent.getParcelableArrayListExtra<LatLng>(ROUTE_LIST) as ArrayList<LatLng>
             totalDistance = intent.getDoubleExtra(DISTANCE, 0.0)
-            state.currentTrack!!.duration = time.toLong() / 1000
-            state.currentTrack!!.startAt = startTime
-            state.currentTrack!!.routeList = routeList
-            state.currentTrack!!.distance = totalDistance.toInt()
+            currentTrack!!.duration = time.toLong() / 1000
+            currentTrack!!.startAt = startTime
+            currentTrack!!.routeList = routeList
+            currentTrack!!.distance = totalDistance.toInt()
         }
     }
 
@@ -190,7 +179,7 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_finish) {
         val db = App.instance?.dBHelper?.writableDatabase!!
 
         val recordTrackProvider = RecordTrackProvider()
-        return recordTrackProvider.recordTrackAsync(db, state?.currentTrack!!)
+        return recordTrackProvider.recordTrackAsync(db, currentTrack!!)
     }
 
     private fun getTimeStringFromDouble(time: Double): String {
@@ -208,8 +197,6 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_finish) {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.v("!!!!onDestroy", "onDestroy")
         unregisterReceivers()
-//        stopTimer()
     }
 }

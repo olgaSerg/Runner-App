@@ -5,10 +5,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.util.Log
 import android.widget.Toast
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.fragment.app.Fragment
 import bolts.Task
 import com.example.runnerapp.models.TrackModel
 import com.example.runnerapp.providers.GetTracksProvider
@@ -23,7 +20,7 @@ class TracksSynchronizer(val db: SQLiteDatabase, val context: Context) {
         if (!hasConnection()) {
             Toast.makeText(
                 context,
-                "Интернет соединение отсутствует",
+                context.getString(R.string.error_internet_connection),
                 Toast.LENGTH_SHORT
             ).show()
             callback()
@@ -34,21 +31,14 @@ class TracksSynchronizer(val db: SQLiteDatabase, val context: Context) {
         val recordTrackProvider = RecordTrackProvider()
         // step 1. download new tracks from firebase
         getTracksProvider.getTracksKeysFromFirebase { keysList ->
-            Log.i("!!!keysListFirebase", keysList.joinToString(separator = " "))
             // compare keys list from firebase with keys list from local db
             getTracksProvider.getFirebaseKeysListFromDbAsync(db).onSuccess({
-                Log.i("!!!keysFromDB", it.result.joinToString(separator = " "))
                 // keys of new records from firebase
                 val result = getNewTracksKeysFromFirebase(keysList, it.result)
-                Log.i("!!!newKeysListFirebase", result.joinToString(separator = " "))
                 result
             }, Task.BACKGROUND_EXECUTOR).onSuccess {
                 // get tracks from firebase by the list of keys
                 getTracksProvider.getNewTracksListFromFirebase(it.result) { tracksList ->
-                    Log.i(
-                        "newTracksListFromFirebase",
-                        tracksList.joinToString(separator = " ")
-                    )
                     // write new tracks from firebase to local db
                     recordTrackProvider.recordNewTracksFromFirebase(db, tracksList)
                         .continueWith {
@@ -62,7 +52,12 @@ class TracksSynchronizer(val db: SQLiteDatabase, val context: Context) {
                         }
                 }
             }
-        }
+        }.continueWith({
+            if (it.isFaulted) {
+                showSynchronizationFailedToast()
+                callback()
+            }
+        }, Task.UI_THREAD_EXECUTOR)
     }
 
     private fun getNewTracksKeysFromFirebase(
@@ -131,5 +126,13 @@ class TracksSynchronizer(val db: SQLiteDatabase, val context: Context) {
             activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
             else -> false
         }
+    }
+
+    private fun showSynchronizationFailedToast() {
+        Toast.makeText(
+            context,
+            context.getString(R.string.error_synchronization),
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }

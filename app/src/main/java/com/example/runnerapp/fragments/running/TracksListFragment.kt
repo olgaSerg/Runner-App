@@ -3,7 +3,6 @@ package com.example.runnerapp.fragments.running
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
 import androidx.core.view.isVisible
@@ -70,17 +69,31 @@ class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initializeFields(view)
+
+        val fab = fab ?: return
+
+        startSynchronization()
+
+        fab.setOnClickListener {
+            fabClickListener?.onFABClick()
+        }
+
+        setRefreshListener()
+    }
+
+    private fun initializeFields(view: View) {
         tracksRecyclerView = view.findViewById(R.id.recycler_view_tracks)
         fab = view.findViewById(R.id.floating_action_button)
         pullToRefresh = view.findViewById(R.id.swipe_container)
         progressIndicator = view.findViewById(R.id.progress_indicator)
         state = arguments?.getSerializable(STATE) as State
+    }
 
+    private fun startSynchronization() {
         val progressIndicator = progressIndicator ?: return
-        val fab = fab ?: return
         val db = App.instance?.db ?: return
         val state = state ?: return
-
         val getTracksProvider = GetTracksProvider()
         val tracksSynchronizer = TracksSynchronizer(db, requireContext())
 
@@ -104,12 +117,6 @@ class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
         } else {
             progressIndicator.isVisible = false
         }
-
-        fab.setOnClickListener {
-            fabClickListener?.onFABClick()
-        }
-
-        setRefreshListener()
     }
 
     override fun onResume() {
@@ -140,10 +147,6 @@ class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
                 pullToRefresh.isRefreshing = false
                 getTracksProvider.getTracksAsync(db).onSuccess({
                     displayTracksList()
-                    Log.i(
-                        "getTracksListFromDB",
-                        it.result.joinToString(separator = " ")
-                    )
                 }, Task.UI_THREAD_EXECUTOR)
             }
         }

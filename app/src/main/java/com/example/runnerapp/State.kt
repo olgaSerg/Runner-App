@@ -1,9 +1,8 @@
 package com.example.runnerapp
 
 import com.example.runnerapp.models.NotificationModel
-import com.example.runnerapp.models.TrackModel
 import java.io.Serializable
-import java.util.*
+import java.util.Date
 
 // TODO: Split into separate states
 class State(
@@ -28,5 +27,5 @@ class State(
     var runningTime: String? = null,
     var totalDistance: Double? = null,
     var isInitialSynchronizationDone: Boolean = false,
-    var currentTrack: TrackModel? = null
+//    var currentTrack: TrackModel? = null
 ) : Serializable

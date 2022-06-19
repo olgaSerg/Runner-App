@@ -79,17 +79,13 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         displayState()
 
-
-
         setButtonLoginClickListener(email, password)
 
         registrationLink.setOnClickListener {
             registrationLinkClick?.onRegistrationLinkClick()
         }
 
-        Log.d("!!!", "login started: " + state.isTaskLoginStarted.toString())
         if (state.isTaskLoginStarted) {
-            Log.d("!!!", "Clicking login button")
             loginButton.callOnClick()
         }
     }
@@ -126,7 +122,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 password.editText?.error = getString(R.string.error_empty_field)
                 hasError = true
             }
-            if (hasError){
+            if (hasError) {
                 state.isTaskLoginStarted = false
                 displayState()
                 return@setOnClickListener

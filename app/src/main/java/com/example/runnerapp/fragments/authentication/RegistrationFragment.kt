@@ -135,8 +135,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
     }
 
     private fun setPasswordError(password: TextInputLayout, passwordConfirmation: TextInputLayout) {
-        password.error = "Пароли не совпадают"
-        passwordConfirmation.error = "Пароли не совпадают"
+        password.error = getString(R.string.passwords_not_match)
+        passwordConfirmation.error = getString(R.string.passwords_not_match)
     }
 
     private fun checkFields(list: List<TextInputLayout>): Boolean {
@@ -151,7 +151,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
     }
 
     private fun setFieldError(field: TextInputLayout) {
-        field.error = "Заполните пустое поле"
+        field.error = getString(R.string.fill_empty_field)
     }
 
     private fun registerUser() {

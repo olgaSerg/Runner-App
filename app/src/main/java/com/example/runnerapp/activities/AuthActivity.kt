@@ -24,13 +24,9 @@ class AuthActivity : AppCompatActivity(), RegistrationFragment.OnLoginLinkClickL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_auth)
 
         auth = Firebase.auth
-
-        // TODO: Remove test credentials
-        state.email = "olga@gmail.com"
-        state.password = "123123"
 
         if (savedInstanceState != null) {
             state = savedInstanceState.getSerializable(STATE) as State

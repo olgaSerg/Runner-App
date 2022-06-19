@@ -11,5 +11,4 @@ class TrackModel(
     var routeList: ArrayList<LatLng>? = null,
     var distance: Int? = null,
     var duration: Long? = null,
-    var userId: String? = null
 ) : Serializable

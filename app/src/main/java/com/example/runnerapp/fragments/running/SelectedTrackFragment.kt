@@ -103,22 +103,18 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
                 )
             )
         }
-//        val bounds = builder.build()
-//        mMap.moveCamera(
-//            CameraUpdateFactory.newLatLngBounds(bounds, 100)
-//        )
 
         mMap.addMarker(
             MarkerOptions()
                 .position(selectedTrack!!.routeList!!.first())
-                .title("Старт")
+                .title(getString(R.string.start))
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
         )
 
         mMap.addMarker(
             MarkerOptions()
                 .position(selectedTrack!!.routeList!!.last())
-                .title("Финиш")
+                .title(getString(R.string.finish))
         )
         enableMyLocation()
     }

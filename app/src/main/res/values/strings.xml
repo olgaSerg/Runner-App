@@ -12,7 +12,7 @@
     <string name="hint_first_name">Введите имя</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="error_empty_field">Заполните пустое поле</string>
-    <string name="main_screen">Главный экран</string>
+    <string name="back_pressed_running_screen_toast">"Пробежка не завершена, нажмите \"Финиш\""</string>
     <string name="reminders">Напоминания</string>
     <string name="logout">Выход</string>
     <string name="request_permission">Доступ к местоположению необходим для записи маршрута и отображения на карте. Перейдите в экран настроек для предоставления доступа к местополжению</string>
@@ -29,6 +29,17 @@
     <string name="add_notification">Добавить напоминание</string>
     <string name="delete_notification">Удалить напоминание</string>
     <string name="open_settings">Настройки</string>
-    <string name="finish">Финиш</string>
+    <string name="location_permission">Необходимо включить определение местоположения</string>
+    <string name="location_on">Включить</string>
+    <string name="main_screen">Главный экран</string>
+    <string name="passwords_not_match">Пароли не совпадают</string>
+    <string name="fill_empty_field">Заполните пустое поле</string>
+    <string name="time_change_notification">Время напоминания изменено на:</string>
+    <string name="error_saving_track">Трек не будет сохранен, так как маршрут отсутсвует</string>
     <string name="start">Старт</string>
+    <string name="finish">Финиш</string>
+    <string name="title_app">RunnerApp</string>
+    <string name="background_notification">Приложение работает в фоновом режиме</string>
+    <string name="error_internet_connection">Интернет соединение отсутствует</string>
+    <string name="error_synchronization">Ошибка синхронизации</string>
 </resources>

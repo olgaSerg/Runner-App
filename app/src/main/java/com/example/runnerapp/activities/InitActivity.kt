@@ -27,7 +27,7 @@ class InitActivity : AppCompatActivity() {
         imageViewLogo.startAnimation(animationRotateCenter)
 
         Task.callInBackground {
-            sleep(2000)
+            sleep(3000)
         }.onSuccess {
             val intent = Intent(this, AuthActivity::class.java)
             startActivity(intent)

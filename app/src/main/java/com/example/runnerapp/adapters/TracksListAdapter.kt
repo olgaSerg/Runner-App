@@ -1,6 +1,5 @@
 package com.example.runnerapp.adapters
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,7 +40,6 @@ class TracksListAdapter(
         holder.itemView.setOnClickListener {
             val selectedTrack = tracks[adapterPosition]
             recyclerViewItemClickListener.onTrackClick(selectedTrack)
-            Log.d("msg", selectedTrack.toString())
         }
     }
 

@@ -2,7 +2,6 @@ package com.example.runnerapp.activities
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
@@ -99,9 +98,6 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnStartButtonC
         loadFragments(state)
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         fusedLocationClient.lastLocation
-            .addOnSuccessListener { location: Location? ->
-                Toast.makeText(this, "$location", Toast.LENGTH_SHORT).show()
-            }
     }
 
     override fun clickFinishButton(time: String, totalDistance: Double) {
@@ -113,7 +109,7 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnStartButtonC
 
     override fun onBackPressed() {
         if (state.fragment == FINISH_SCREEN) {
-            Toast.makeText(this, """Пробежка не завершена, нажмите "Финиш"""", Toast.LENGTH_SHORT)
+            Toast.makeText(this, getText(R.string.back_pressed_running_screen_toast), Toast.LENGTH_SHORT)
                 .show()
         } else {
             startActivity(Intent(this, MainScreenActivity::class.java))

@@ -21,7 +21,6 @@ class DBHelper(context: Context) :
     SQLiteOpenHelper(context, "TracksDB", null, DB_VERSION) {
 
     override fun onCreate(db: SQLiteDatabase) {
-        Log.d("msg", "--- onCreate database ---")
 
         for (i in 1..DB_VERSION) {
             migrate(db, i)

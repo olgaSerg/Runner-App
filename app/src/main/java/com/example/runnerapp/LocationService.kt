@@ -10,7 +10,6 @@ import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.runnerapp.activities.FASTEST_INTERVAL
@@ -37,7 +36,7 @@ class LocationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-//        startForegroundService()
+        startForegroundService()
         return START_NOT_STICKY
     }
 
@@ -47,7 +46,6 @@ class LocationService : Service() {
 
     @SuppressLint("MissingPermission")
     private fun updateLocationTracking() {
-//        if(TrackingUtility.hasLocationPermissions(this)) {
         val mLocationRequest = LocationRequest.create()
         mLocationRequest.interval = 1000
         mLocationRequest.fastestInterval = FASTEST_INTERVAL
@@ -57,9 +55,6 @@ class LocationService : Service() {
             locationCallback,
             Looper.getMainLooper()
         )
-//        } else {
-//            fusedLocationProviderClient?.removeLocationUpdates(locationCallback)
-//        }
     }
 
     private val locationCallback = object : LocationCallback() {
@@ -91,11 +86,6 @@ class LocationService : Service() {
                     sendBroadcast()
                 }
             }
-            Log.d(
-                "NEW LOC",
-                "${result.locations[0].latitude}, ${result.locations[0].longitude}"
-            )
-            Log.d("NEW DISTANCE", totalDistance.toString())
         }
     }
 
@@ -117,8 +107,8 @@ class LocationService : Service() {
         val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setAutoCancel(false)
             .setOngoing(true)
-            .setContentTitle("Running App")
-            .setContentText("00:00:00")
+            .setContentTitle(getString(R.string.title_app))
+            .setContentText(getString(R.string.background_notification))
 
         startForeground(NOTIFICATION_ID, notificationBuilder.build())
     }
@@ -134,8 +124,8 @@ class LocationService : Service() {
     }
 
     override fun onDestroy() {
+        super.onDestroy()
         sendBroadcast()
         fusedLocationProviderClient?.removeLocationUpdates(locationCallback)
-        super.onDestroy()
     }
 }

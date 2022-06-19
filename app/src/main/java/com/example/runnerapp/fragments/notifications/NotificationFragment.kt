@@ -32,7 +32,6 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
     private var addNotificationButton: Button? = null
     private var deleteButton: Button? = null
     private var saveButton: Button? = null
-//    private var notification: NotificationModel? = null
     private var state: State? = null
     private var deleteNotificationClick: OnDeleteNotificationClick? = null
 
@@ -186,7 +185,7 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
         val saveButton = saveButton ?: return
         val notification = state?.notification ?: return
         saveButton.setOnClickListener {
-            val title = "Время напоминания изменено на:"
+            val title = getString(R.string.time_change_notification)
             val time = getTimeInMillis(timePicker, datePicker)
             val notificationProvider = NotificationProvider()
             notification.notifyAt = time

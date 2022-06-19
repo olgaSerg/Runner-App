@@ -1,8 +1,11 @@
 package com.example.runnerapp.activities
 
-
 import android.Manifest
-import android.app.*
+import android.app.AlertDialog
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,7 +21,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import com.example.runnerapp.models.NavigationDrawerItem
 import com.example.runnerapp.models.NotificationModel
 import com.example.runnerapp.models.TrackModel
 import com.google.android.material.appbar.MaterialToolbar
@@ -26,8 +28,6 @@ import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import android.location.LocationManager
-import androidx.core.content.ContentProviderCompat.requireContext
-import bolts.Task
 import com.example.runnerapp.*
 import com.example.runnerapp.fragments.notifications.CHANNEL_ID
 import com.example.runnerapp.fragments.notifications.NotificationFragment
@@ -59,7 +59,6 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
             ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
             if (isGranted) {
-                state.fragment = TRACKS_LIST
                 displayState()
             } else {
                 if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -76,13 +75,10 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         setContentView(R.layout.activity_main_screen)
         createNotificationChannel()
 
-
         initializeFields()
 
         val toolbar = toolbar ?: return
         val drawerLayout = drawerLayout ?: return
-
-        val itemsNavigation = createItemsNavigationArray()
 
         if (savedInstanceState != null) {
             state = savedInstanceState.getSerializable(STATE) as State
@@ -90,18 +86,15 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
             state.fragment = TRACKS_LIST
         }
 
-
-
-        showFragmentPreview()
         displayState()
-
+        showFragmentPreview()
 
         toolbar.setNavigationOnClickListener {
             drawerLayout.openDrawer(Gravity.LEFT)
         }
 
         setItemLogoutClickListener()
-        setNavigationListener(drawerLayout, itemsNavigation)
+        setNavigationListener(drawerLayout)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -119,11 +112,11 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     }
 
     private fun showFragmentPreview() {
-        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        val hasPermissions =
+            (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) && checkLocationServiceEnabled()
-        ) {
-//            displayState()
-        } else {
+
+        if (!hasPermissions) {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             checkLocationServiceEnabled()
         }
@@ -132,6 +125,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     private fun loadSelectedTrack() {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.fragment_container, SelectedTrackFragment.newInstance(state))
+            addToBackStack("SelectedTrack")
             commit()
         }
     }
@@ -139,6 +133,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     private fun loadNotification() {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.fragment_container, NotificationFragment.newInstance(state))
+            addToBackStack("Notification")
             commit()
         }
     }
@@ -165,14 +160,6 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         itemLogout = findViewById(R.id.item_view_logout)
     }
 
-//    private fun loadTracksListFragment() {
-//        supportFragmentManager.beginTransaction().apply {
-//            replace(R.id.fragment_container, TracksListFragment())
-//            commit()
-//        }
-//        state.fragment = TRACKS_LIST
-//    }
-
     private fun checkLocationServiceEnabled(): Boolean {
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         try {
@@ -190,9 +177,9 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
 
     private fun buildAlertMessageNoLocationService(): Boolean {
         AlertDialog.Builder(this)
-            .setMessage("Необходимо включить определение местоположения")
+            .setMessage(getString(R.string.location_permission))
             .setPositiveButton(
-                "Включить"
+                getString(R.string.location_on)
             ) { dialog, id -> startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) }
             .setCancelable(false)
             .create()
@@ -203,8 +190,6 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     private fun setItemLogoutClickListener() {
         val itemLogout = itemLogout ?: return
         itemLogout.setOnClickListener {
-            itemLogout.setBackgroundColor(getColor(R.color.color_checked_item))
-
             Firebase.auth.signOut()
 
             val intent = Intent(this, AuthActivity::class.java)
@@ -212,10 +197,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         }
     }
 
-    private fun setNavigationListener(
-        drawerLayout: DrawerLayout,
-        itemsNavigation: ArrayList<NavigationDrawerItem>
-    ) {
+    private fun setNavigationListener(drawerLayout: DrawerLayout) {
         val navigationView = navigationView ?: return
         navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -238,29 +220,15 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         startActivity(intent)
     }
 
-    private fun createItemsNavigationArray(): ArrayList<NavigationDrawerItem> {
-        return arrayListOf(
-            NavigationDrawerItem(
-                TRACKS_LIST,
-                TracksListFragment(),
-                getString(R.string.main_screen)
-            ),
-            NavigationDrawerItem(
-                NOTIFICATIONS_LIST,
-                NotificationsListFragment(),
-                getString(R.string.reminders)
-            )
-        )
-    }
-
     private fun loadTracksList() {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.fragment_container, TracksListFragment.newInstance(state))
+            addToBackStack("TracksList")
             commit()
         }
 
         if (toolbar != null) {
-            toolbar!!.title = "Главный экран"
+            toolbar!!.title = getString(R.string.main_screen)
         }
         if (drawerLayout != null) {
             drawerLayout!!.closeDrawer(GravityCompat.START)
@@ -270,11 +238,12 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     override fun loadNotificationsList() {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.fragment_container, NotificationsListFragment())
+            addToBackStack("NotificationsList")
             commit()
         }
 
         if (toolbar != null) {
-            toolbar!!.title = "Напоминания"
+            toolbar!!.title = getString(R.string.notification)
         }
 
         if (drawerLayout != null) {
@@ -294,11 +263,6 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
 
     override fun onTrackClick(track: TrackModel) {
         state.trackId = track.id
-//        supportFragmentManager.beginTransaction().apply {
-//            replace(R.id.fragment_container, SelectedTrackFragment.newInstance(state))
-//            addToBackStack("SelectedTrack")
-//            commit()
-//        }
         state.fragment = SELECTED_TRACK
         displayState()
     }
@@ -306,11 +270,6 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     override fun onFabNotificationClick() {
         state.isNewNotification = true
         state.notification = null
-//        supportFragmentManager.beginTransaction().apply {
-//            replace(R.id.fragment_container, NotificationFragment.newInstance(state))
-//            addToBackStack("Notification")
-//            commit()
-//        }
         state.fragment = NOTIFICATION
         displayState()
     }
@@ -349,7 +308,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "CHANNEL"
-            val descriptionText = "IT'S A CHANNEL"
+            val descriptionText = "CHANNEL"
             val importance = NotificationManager.IMPORTANCE_DEFAULT
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
@@ -363,11 +322,6 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
     override fun onNotificationItemClick(notification: NotificationModel) {
         state.isNewNotification = false
         state.notification = notification
-//        supportFragmentManager.beginTransaction().apply {
-//            replace(R.id.fragment_container, NotificationFragment.newInstance(state))
-//            addToBackStack("Notification")
-//            commit()
-//        }
         state.fragment = NOTIFICATION
         displayState()
     }
@@ -378,14 +332,26 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         checkLocationServiceEnabled()
     }
 
-//    override fun onBackPressed() {
-//        super.onBackPressed()
-//        when (state.fragment) {
-////            TRACKS_LIST -> loadTracksListFragment()
-//            NOTIFICATION -> loadNotificationsList()
-////            NOTIFICATIONS_LIST -> loadTracksListFragment()
-//            SELECTED_TRACK -> loadTracksListFragment()
-//        }
-//    }
+    override fun onBackPressed() {
+        super.onBackPressed()
+        when (state.fragment) {
+            TRACKS_LIST -> {
+                state.fragment = TRACKS_LIST
+                displayState()
+            }
+            NOTIFICATION -> {
+                state.fragment = NOTIFICATIONS_LIST
+                displayState()
+            }
+            NOTIFICATIONS_LIST -> {
+                state.fragment = TRACKS_LIST
+                displayState()
+            }
+            SELECTED_TRACK -> {
+                state.fragment = TRACKS_LIST
+                displayState()
+            }
+        }
+    }
 }
 
