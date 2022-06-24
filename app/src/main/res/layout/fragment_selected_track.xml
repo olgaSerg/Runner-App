@@ -12,9 +12,8 @@
         android:layout_height="wrap_content"
         android:textSize="36sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/text_view_running_time"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/text_view_title_distance"
+        app:layout_constraintStart_toStartOf="@+id/text_view_title_distance"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -23,7 +22,7 @@
         android:layout_height="wrap_content"
         android:text="@string/track_distance"
         android:textSize="18sp"
-        app:layout_constraintEnd_toStartOf="@+id/text_view_title_running_time"
+        app:layout_constraintEnd_toStartOf="@id/text_view_title_running_time"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_view_distance" />
 
@@ -33,9 +32,8 @@
         android:layout_height="wrap_content"
         android:textSize="36sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/text_view_distance"
+        app:layout_constraintEnd_toEndOf="@id/text_view_title_running_time"
+        app:layout_constraintStart_toStartOf="@id/text_view_title_running_time"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -45,7 +43,7 @@
         android:text="@string/running_time"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/text_view_title_distance"
+        app:layout_constraintStart_toEndOf="@id/text_view_title_distance"
         app:layout_constraintTop_toBottomOf="@id/text_view_running_time" />
 
     <androidx.fragment.app.FragmentContainerView

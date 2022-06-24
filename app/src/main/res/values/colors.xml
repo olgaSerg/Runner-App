@@ -10,5 +10,10 @@
     <color name="white">#FFFFFFFF</color>
     <color name="color_unchecked_item">#FFFFFFFF</color>
     <color name="color_checked_item">#8BC34A</color>
-    <color name="main_color">#A1178897</color>
+    <color name="start_track_color">#A123D15D</color>
+    <color name="finish_track_color">#B11307</color>
+    <color name="main_color">#6200ef</color>
+    <color name="button_finish_color">#E33D30</color>
+    <color name="button_start_color">#23D15D</color>
+    <color name="date_notification_color">#95454343</color>
 </resources>

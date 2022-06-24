@@ -72,8 +72,7 @@ class AuthActivity : AppCompatActivity(), RegistrationFragment.OnLoginLinkClickL
     }
 
     override fun onLoginButtonClick() {
-        val intent = Intent(this, MainScreenActivity::class.java)
-        startActivity(intent)
+        loadMainScreenActivity()
     }
 
     private fun loadMainScreenActivity() {
@@ -82,8 +81,7 @@ class AuthActivity : AppCompatActivity(), RegistrationFragment.OnLoginLinkClickL
     }
 
     override fun onSignUpClickListener() {
-        val intent = Intent(this, MainScreenActivity::class.java)
-        startActivity(intent)
+        loadMainScreenActivity()
     }
 
     private fun displayState() {

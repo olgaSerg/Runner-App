@@ -107,6 +107,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         val loginButton = loginButton ?: return
 
         loginButton.setOnClickListener {
+            resetErrors()
             val state = state ?: return@setOnClickListener
             state.isTaskLoginStarted = true
             loginButton.isEnabled = false
@@ -114,12 +115,12 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             state.password = password.editText?.text.toString()
 
             if (state.email.isEmpty()) {
-                email.editText?.error = getString(R.string.error_empty_field)
+                email.error = getString(R.string.error_empty_field)
                 hasError = true
             }
 
             if (state.password.isEmpty()) {
-                password.editText?.error = getString(R.string.error_empty_field)
+                password.error = getString(R.string.error_empty_field)
                 hasError = true
             }
             if (hasError) {
@@ -131,6 +132,12 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         }
     }
 
+    private fun resetErrors() {
+        email?.error = null
+        password?.error = null
+        hasError = false
+    }
+
     private fun loginUser() {
         val state = state ?: return
         val email = email ?: return
@@ -140,23 +147,22 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         auth.signInWithEmailAndPassword(
             email.editText?.text.toString(),
             password.editText?.text.toString()
-        )
-            .addOnCompleteListener(requireActivity()) { task ->
-                if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
-                    Log.d(TAG, "signInWithEmail:success")
-                    loginButtonClickListener?.onLoginButtonClick()
-                } else {
-                    // If sign in fails, display a message to the user.
-                    Log.w(TAG, "signInWithEmail:failure", task.exception)
-                    Toast.makeText(
-                        requireContext(), "Authentication failed.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                state.isTaskLoginStarted = false
-                loginButton.isEnabled = true
+        ).addOnCompleteListener(requireActivity()) { task ->
+            if (task.isSuccessful) {
+                // Sign in success, update UI with the signed-in user's information
+                Log.d(TAG, "signInWithEmail:success")
+                loginButtonClickListener?.onLoginButtonClick()
+            } else {
+                // If sign in fails, display a message to the user.
+                Log.w(TAG, "signInWithEmail:failure", task.exception)
+                Toast.makeText(
+                    requireContext(), "Authentication failed.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
+            state.isTaskLoginStarted = false
+            loginButton.isEnabled = true
+        }
     }
 
     override fun onPause() {

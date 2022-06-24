@@ -35,6 +35,7 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_in_progress
     private var errorDialogClick: OnErrorDialogClick? = null
     private var state: State? = null
     private var currentTrack: TrackModel? = null
+    private var isReceiverUnregistered = false
 
     interface OnButtonFinishClick {
         fun clickFinishButton(time: String, totalDistance: Double)
@@ -107,6 +108,8 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_in_progress
     private fun stopTimer() {
         requireActivity().stopService(serviceTimerIntent)
         requireActivity().stopService(serviceLocationIntent)
+        requireActivity().unregisterReceiver(updateTime)
+        isReceiverUnregistered = true
     }
 
     private fun registerReceivers() {
@@ -143,6 +146,7 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_in_progress
             }
 
             buttonFinishClick?.clickFinishButton(getTimeStringFromDouble(time), totalDistance)
+            currentTrack.duration = time.toLong() / 1000
 
             recordTrackToLocalDb().onSuccess {
                 val db = App.instance?.db ?: return@onSuccess
@@ -198,6 +202,8 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_in_progress
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceivers()
+        if (!isReceiverUnregistered) {
+            unregisterReceivers()
+        }
     }
 }

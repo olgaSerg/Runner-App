@@ -13,13 +13,13 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="error_empty_field">Заполните пустое поле</string>
     <string name="back_pressed_running_screen_toast">"Пробежка не завершена, нажмите \"Финиш\""</string>
-    <string name="reminders">Напоминания</string>
+    <string name="notifications">Напоминания</string>
     <string name="logout">Выход</string>
     <string name="request_permission">Доступ к местоположению необходим для записи маршрута и отображения на карте. Перейдите в экран настроек для предоставления доступа к местополжению</string>
     <string name="running_time">Время пробежки</string>
     <string name="ann_new_track">Новый трек</string>
     <string name="start_date">Дата старта</string>
-    <string name="track_distance">Дистанция(км)</string>
+    <string name="track_distance">Дистанция (км)</string>
     <string name="save_changes">Сохранить изменения</string>
     <string name="notification_delete">Напоминание удалено</string>
     <string name="ok">OK</string>
@@ -42,4 +42,8 @@
     <string name="background_notification">Приложение работает в фоновом режиме</string>
     <string name="error_internet_connection">Интернет соединение отсутствует</string>
     <string name="error_synchronization">Ошибка синхронизации</string>
+    <string name="track">Трек</string>
+    <string name="result">Результаты пробежки</string>
+    <string name="length_error">Минимальная длина 6 символов</string>
+    <string name="new_running">Новая пробежка</string>
 </resources>

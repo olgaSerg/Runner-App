@@ -5,20 +5,32 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <TextView
+        android:id="@+id/text_view_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:textSize="50sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_start"
-        android:layout_marginTop="240dp"
+        android:id="@+id/button_finish"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingVertical="30dp"
         android:paddingHorizontal="40dp"
-        android:text="@string/start"
+        android:layout_marginTop="150dp"
+        android:text="@string/finish"
         android:textSize="45sp"
         android:textStyle="bold"
-        app:backgroundTint="@color/button_start_color"
+        app:backgroundTint="@color/button_finish_color"
         app:cornerRadius="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

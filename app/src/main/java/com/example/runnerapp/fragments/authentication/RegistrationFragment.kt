@@ -108,8 +108,10 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
             state?.isTaskRegistrationStarted = true
             buttonRegistration.isEnabled = false
             val validationResults = listOf(
-                checkPasswordsMatch(password, passwordConfirmation),
                 checkFields(fields),
+                checkPasswordsMatch(password, passwordConfirmation),
+                checkMinPasswordLength(password),
+                checkMinPasswordLength(passwordConfirmation)
             )
 
             val isFormValid = validationResults.all { it }
@@ -142,12 +144,21 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
     private fun checkFields(list: List<TextInputLayout>): Boolean {
         var allFilled = true
         for (field in list) {
+            field.error = null
             if (field.editText?.text?.isEmpty() == true) {
                 setFieldError(field)
                 allFilled = false
             }
         }
         return allFilled
+    }
+
+    private fun checkMinPasswordLength(password: TextInputLayout): Boolean {
+        if (password.editText?.text.toString().length < 6) {
+            password.error = getString(R.string.length_error)
+            return false
+        }
+        return true
     }
 
     private fun setFieldError(field: TextInputLayout) {
@@ -162,19 +173,20 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         auth.createUserWithEmailAndPassword(
             email?.editText?.text.toString(),
             password?.editText?.text.toString()
-        )
-            .addOnCompleteListener(requireActivity()) { task ->
-                if (task.isSuccessful) {
-                    signUpClickListener?.onSignUpClickListener()
-                    Log.d(TAG, "createUserWithEmail:success")
-                } else {
-                    Log.w(TAG, "createUserWithEmail:failure", task.exception)
-                    Toast.makeText(requireContext(), "Authentication failed.",
-                        Toast.LENGTH_SHORT).show()
-                }
-                state.isTaskRegistrationStarted = false
-                buttonRegistration?.isEnabled = true
+        ).addOnCompleteListener(requireActivity()) { task ->
+            if (task.isSuccessful) {
+                signUpClickListener?.onSignUpClickListener()
+                Log.d(TAG, "createUserWithEmail:success")
+            } else {
+                Log.w(TAG, "createUserWithEmail:failure", task.exception)
+                Toast.makeText(
+                    requireContext(), "Authentication failed.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
+            state.isTaskRegistrationStarted = false
+            buttonRegistration?.isEnabled = true
+        }
     }
 
     override fun onPause() {

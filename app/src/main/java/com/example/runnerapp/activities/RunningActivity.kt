@@ -10,6 +10,7 @@ import com.example.runnerapp.fragments.running.RunningInProgressFragment
 import com.example.runnerapp.fragments.running.RunningStartFragment
 import com.example.runnerapp.fragments.running.RunningResultFragment
 import com.google.android.gms.location.LocationServices
+import com.google.android.material.appbar.MaterialToolbar
 
 const val FASTEST_INTERVAL: Long = 2000
 const val START_SCREEN = "start"
@@ -20,19 +21,27 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnStartButtonC
     RunningInProgressFragment.OnButtonFinishClick, RunningInProgressFragment.OnErrorDialogClick {
 
     private var state = State()
+    private var toolbar: MaterialToolbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_running)
+
+        toolbar = findViewById(R.id.toolbar_running)
+
         if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .add(R.id.fragment_container, RunningStartFragment())
-                .commit()
             state.fragment = START_SCREEN
         } else {
             state = savedInstanceState.getSerializable(STATE) as State
-            loadFragments(state)
         }
+        loadFragments(state)
+        setUpButton()
+    }
+
+    private fun setUpButton() {
+        val toolbar = toolbar ?: return
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -58,6 +67,7 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnStartButtonC
             )
             .replace(R.id.fragment_container, RunningStartFragment())
             .commit()
+        toolbar?.title = getString(R.string.new_running)
     }
 
     private fun loadRunningInProgressFragment() {
@@ -74,6 +84,7 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnStartButtonC
 
     private fun loadResultRunningFragment() {
         if (state.runningTime != null && state.totalDistance != null) {
+            toolbar?.title = getString(R.string.result)
             supportFragmentManager.beginTransaction()
                 .setCustomAnimations(
                     R.anim.card_flip_right_in,
@@ -118,6 +129,11 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnStartButtonC
 
     override fun onErrorDialogClick() {
         startActivity(Intent(this, MainScreenActivity::class.java))
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return true
     }
 }
 

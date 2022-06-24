@@ -44,7 +44,7 @@ class TracksListAdapter(
     }
 
     private fun formatDate(date: Date): String {
-        val dateFormat: DateFormat = SimpleDateFormat("HH:mm:ss dd.MM.yyyy", Locale.getDefault())
+        val dateFormat: DateFormat = SimpleDateFormat("HH:mm dd.MM.yyyy", Locale.getDefault())
         return dateFormat.format(date)
     }
 

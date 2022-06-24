@@ -19,8 +19,8 @@
             android:layout_marginTop="20dp"
             android:ems="10"
             android:hint="@string/hint_email"
-            app:errorEnabled="true"
             android:inputType="textEmailAddress"
+            app:errorEnabled="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -37,13 +37,13 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="50dp"
             android:layout_marginTop="10dp"
-            app:errorEnabled="true"
             android:ems="10"
             android:hint="@string/hint_first_name"
             android:inputType="textPersonName"
+            app:errorEnabled="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/email_registration">
+            app:layout_constraintTop_toBottomOf="@id/email_registration">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
@@ -57,14 +57,14 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="50dp"
             android:layout_marginTop="10dp"
-            app:errorEnabled="true"
             android:ems="10"
             android:hint="@string/hint_last_name"
             android:inputType="textPersonName"
-            app:layout_constraintBottom_toTopOf="@+id/password_registration"
+            app:errorEnabled="true"
+            app:layout_constraintBottom_toTopOf="@id/password_registration"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/first_name_registration">
+            app:layout_constraintTop_toBottomOf="@id/first_name_registration">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
@@ -78,14 +78,14 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="50dp"
             android:layout_marginTop="10dp"
-            app:errorEnabled="true"
             android:ems="10"
             android:hint="@string/hint_password"
             app:endIconMode="password_toggle"
-            app:layout_constraintBottom_toTopOf="@+id/confirm_password"
+            app:errorEnabled="true"
+            app:layout_constraintBottom_toTopOf="@id/confirm_password"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/last_name_registration">
+            app:layout_constraintTop_toBottomOf="@id/last_name_registration">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
@@ -101,10 +101,10 @@
             android:layout_marginHorizontal="50dp"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="20dp"
-            app:errorEnabled="true"
             android:ems="10"
             android:hint="@string/hint_confirm_password"
             app:endIconMode="password_toggle"
+            app:errorEnabled="true"
             app:layout_constraintBottom_toTopOf="@id/button_registration"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

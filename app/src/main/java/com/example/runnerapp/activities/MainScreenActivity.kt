@@ -128,6 +128,10 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
             addToBackStack("SelectedTrack")
             commit()
         }
+
+        if (toolbar != null) {
+            toolbar!!.title = getString(R.string.track)
+        }
     }
 
     private fun loadNotification() {
@@ -243,7 +247,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         }
 
         if (toolbar != null) {
-            toolbar!!.title = getString(R.string.notification)
+            toolbar!!.title = getString(R.string.notifications)
         }
 
         if (drawerLayout != null) {
