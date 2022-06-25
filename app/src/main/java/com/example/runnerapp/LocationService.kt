@@ -3,6 +3,7 @@ package com.example.runnerapp
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -13,6 +14,7 @@ import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.runnerapp.activities.FASTEST_INTERVAL
+import com.example.runnerapp.activities.RunningActivity
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 
@@ -104,12 +106,21 @@ class LocationService : Service() {
             createNotificationChannel(notificationManager)
         }
 
+        val intent = Intent(applicationContext, RunningActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            applicationContext,
+            1,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
         val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setAutoCancel(false)
             .setOngoing(true)
             .setContentTitle(getString(R.string.title_app))
             .setContentText(getString(R.string.background_notification))
-
+            .setSmallIcon(R.drawable.ic_run_24)
+            .setContentIntent(pendingIntent)
         startForeground(NOTIFICATION_ID, notificationBuilder.build())
     }
 
@@ -121,6 +132,11 @@ class LocationService : Service() {
             NotificationManager.IMPORTANCE_LOW
         )
         notificationManager.createNotificationChannel(channel)
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        stopForeground(true)
     }
 
     override fun onDestroy() {
