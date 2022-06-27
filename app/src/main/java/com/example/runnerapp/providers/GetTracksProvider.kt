@@ -107,7 +107,7 @@ class GetTracksProvider {
         }
     }
 
-    fun getTracksKeysFromFirebase(callback: (ArrayList<String>) -> Unit) : Task<ArrayList<String>> {
+    fun getTracksKeysFromFirebase(callback: (ArrayList<String>) -> Unit): Task<Unit> {
         return Task.callInBackground {
             val database = Firebase.database.reference
             val keysListFirebase = arrayListOf<String>()
@@ -123,17 +123,16 @@ class GetTracksProvider {
                     callback(keysListFirebase)
                 }
             }
-            keysListFirebase
         }
     }
 
     fun getNewTracksListFromFirebase(
         keysList: ArrayList<String>,
         callback: (ArrayList<TrackModel>) -> Unit
-    ): ArrayList<TrackModel> {
+    ) {
         val database = Firebase.database.reference
         val tracksList = arrayListOf<TrackModel>()
-        val userId = userId ?: return tracksList
+        val userId = userId ?: return
 
         val tasks = ArrayList<FirebaseTask<DataSnapshot>>()
         for (key in keysList) {
@@ -158,7 +157,6 @@ class GetTracksProvider {
         }.addOnFailureListener {
             Log.e("firebase", "Error getting data", it)
         }
-        return tracksList
     }
 
     private fun formatTime(time: Long): Date {
