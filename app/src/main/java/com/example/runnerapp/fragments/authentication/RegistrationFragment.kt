@@ -50,11 +50,11 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        loginLinkClickListener = try {
-            activity as OnLoginLinkClickListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnLoginLinkClickListener")
-        }
+        loginLinkClickListener =
+            activity as? OnLoginLinkClickListener
+//        } catch (e: ClassCastException) {
+//            throw ClassCastException("$activity must implement OnLoginLinkClickListener")
+//        }
 
         signUpClickListener = try {
             activity as OnSignUpClickListener
