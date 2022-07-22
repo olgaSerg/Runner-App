@@ -8,6 +8,14 @@ Application for jogging
 - synchronizing tracks on different devices
 - setting notifications to remind user of a jogging
 # Technologies used:
-# Kotlin # Bolts # Firebase # SQLite # GoogleMaps # Services
-# Broadcast Receivers # Material UI # Animation # Notifications
+Kotlin 
+Bolts 
+Firebase 
+SQLite 
+GoogleMaps 
+Services
+Broadcast Receivers 
+Material UI 
+Animation 
+Notifications
 
