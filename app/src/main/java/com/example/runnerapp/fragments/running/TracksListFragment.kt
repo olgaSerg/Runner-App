@@ -53,17 +53,8 @@ class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        fabClickListener = try {
-            activity as OnFABClickListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnFABClickListener")
-        }
-
-        recyclerViewTrackItemClickListener = try {
-            activity as OnTracksRecyclerViewItemClickListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnTracksRecyclerViewItemClickListener")
-        }
+        fabClickListener = activity as? OnFABClickListener
+        recyclerViewTrackItemClickListener = activity as? OnTracksRecyclerViewItemClickListener
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

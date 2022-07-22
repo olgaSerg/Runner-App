@@ -49,17 +49,8 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        registrationLinkClick = try {
-            activity as OnRegistrationLinkClick
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnRegistrationLinkClick")
-        }
-
-        loginButtonClickListener = try {
-            activity as OnLoginButtonClickListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnLoginButtonClickListener")
-        }
+        registrationLinkClick = activity as? OnRegistrationLinkClick
+        loginButtonClickListener = activity as? OnLoginButtonClickListener
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

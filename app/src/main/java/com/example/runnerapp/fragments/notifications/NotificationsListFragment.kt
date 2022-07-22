@@ -31,17 +31,8 @@ class NotificationsListFragment : Fragment(R.layout.fragment_notifications_list)
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        fabNotificationClickListener = try {
-            activity as OnFabNotificationClickListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnFabNotificationClickListener")
-        }
-
-        notificationItemClickListener = try {
-            activity as OnNotificationItemClickListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnNotificationItemClickListener")
-        }
+        fabNotificationClickListener = activity as? OnFabNotificationClickListener
+        notificationItemClickListener = activity as? OnNotificationItemClickListener
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

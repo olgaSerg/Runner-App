@@ -17,11 +17,7 @@ class RunningStartFragment : Fragment(R.layout.fragment_running_start) {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        startButtonClick = try {
-            activity as OnStartButtonClick
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnStartButtonClick")
-        }
+        startButtonClick = activity as? OnStartButtonClick
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

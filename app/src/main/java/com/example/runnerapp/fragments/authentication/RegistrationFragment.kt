@@ -50,17 +50,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        loginLinkClickListener = try {
-            activity as OnLoginLinkClickListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnLoginLinkClickListener")
-        }
-
-        signUpClickListener = try {
-            activity as OnSignUpClickListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnSignUpClickListener")
-        }
+        loginLinkClickListener = activity as? OnLoginLinkClickListener
+        signUpClickListener = activity as? OnSignUpClickListener
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -140,7 +131,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
     }
 
     private fun setEmailError(email: TextInputLayout) {
-        email.error = "Введен некорректный email"
+        email.error = getString(R.string.uncorrect_email)
     }
 
     private fun checkPasswordsMatch(

@@ -46,4 +46,5 @@
     <string name="result">Результаты пробежки</string>
     <string name="length_error">Минимальная длина 6 символов</string>
     <string name="new_running">Новая пробежка</string>
+    <string name="uncorrect_email">Введен некорректный email</string>
 </resources>

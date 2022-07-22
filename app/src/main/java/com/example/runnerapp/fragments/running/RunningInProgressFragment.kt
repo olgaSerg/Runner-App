@@ -59,17 +59,8 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_in_progress
         super.onAttach(context)
         registerReceivers()
 
-        buttonFinishClick = try {
-            activity as OnButtonFinishClick
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnButtonFinishClick")
-        }
-
-        errorDialogClick = try {
-            activity as OnErrorDialogClick
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnErrorDialogClick")
-        }
+        buttonFinishClick = activity as? OnButtonFinishClick
+        errorDialogClick = activity as? OnErrorDialogClick
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

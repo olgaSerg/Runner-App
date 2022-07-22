@@ -60,23 +60,9 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        addNotificationListener = try {
-            activity as OnButtonAddNotificationClick
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnButtonAddNotificationClick")
-        }
-
-        loadNotificationsListListener = try {
-            activity as LoadNotificationListListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnPositiveButtonClick")
-        }
-
-        deleteNotificationClick = try {
-            activity as OnDeleteNotificationClick
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnDeleteNotificationClick")
-        }
+        addNotificationListener = activity as? OnButtonAddNotificationClick
+        loadNotificationsListListener = activity as? LoadNotificationListListener
+        deleteNotificationClick = activity as? OnDeleteNotificationClick
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
