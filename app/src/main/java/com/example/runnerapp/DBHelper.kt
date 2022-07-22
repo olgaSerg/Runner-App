@@ -46,7 +46,7 @@ class DBHelper(context: Context) :
                 $START_TIME STRING,
                 $DISTANCE INTEGER,
                 $RUNNING_TIME LONG,
-                $ROUTE JSONArray,
+                $ROUTE TEXT,
                 $FIREBASE_KEY STRING,
                 $UID STRING
             );

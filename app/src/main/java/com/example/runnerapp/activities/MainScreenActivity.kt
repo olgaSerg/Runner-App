@@ -61,12 +61,7 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
             if (isGranted) {
                 displayState()
             } else {
-                if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                    askUserOpeningAppSettings()
-                }
-                else {
-                    askUserOpeningAppSettings()
-                }
+                askUserOpeningAppSettings()
             }
         }
 
