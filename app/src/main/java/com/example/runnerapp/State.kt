@@ -4,7 +4,6 @@ import com.example.runnerapp.models.NotificationModel
 import java.io.Serializable
 import java.util.Date
 
-// TODO: Split into separate states
 class State(
     var fragment: String = "login",
 

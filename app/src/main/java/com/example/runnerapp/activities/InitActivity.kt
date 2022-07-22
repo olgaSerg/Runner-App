@@ -28,9 +28,14 @@ class InitActivity : AppCompatActivity() {
 
         Task.callInBackground {
             sleep(3000)
-        }.onSuccess {
+        }.onSuccess({
             val intent = Intent(this, AuthActivity::class.java)
             startActivity(intent)
-        }
+        }, Task.UI_THREAD_EXECUTOR)
+    }
+
+    override fun onDestroy() {
+        imageViewLogo = null
+        super.onDestroy()
     }
 }

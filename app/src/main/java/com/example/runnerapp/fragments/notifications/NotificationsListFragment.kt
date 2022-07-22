@@ -78,4 +78,12 @@ class NotificationsListFragment : Fragment(R.layout.fragment_notifications_list)
                 }
         }, Task.UI_THREAD_EXECUTOR)
     }
+
+    override fun onDestroyView() {
+        notificationsRecyclerView = null
+        fabNotification = null
+        fabNotificationClickListener = null
+        notificationItemClickListener = null
+        super.onDestroyView()
+    }
 }

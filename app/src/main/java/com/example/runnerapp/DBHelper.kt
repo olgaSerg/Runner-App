@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 
-const val DB_VERSION = 1
+const val DB_VERSION = 2
 const val TRACKS_TABLE_NAME = "track"
 const val NOTIFICATIONS_TABLE_NAME = "notification"
 const val ID = "id"
@@ -52,6 +52,8 @@ class DBHelper(context: Context) :
             );
             """
                 )
+            }
+            2 -> {
                 db.execSQL(
                     """
             CREATE TABLE $NOTIFICATIONS_TABLE_NAME (

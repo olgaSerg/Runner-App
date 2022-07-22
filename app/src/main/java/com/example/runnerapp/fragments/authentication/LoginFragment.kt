@@ -171,4 +171,14 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         state.email = email?.editText?.text.toString()
         state.password = password?.editText?.text.toString()
     }
+
+    override fun onDestroyView() {
+        email= null
+        password = null
+        loginButton = null
+        registrationLink = null
+        registrationLinkClick = null
+        loginButtonClickListener = null
+        super.onDestroyView()
+    }
 }

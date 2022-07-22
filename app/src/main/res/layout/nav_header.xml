@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/linearLayout2"
     android:layout_width="match_parent"
-    android:layout_height="192dp"
+    android:layout_height="@dimen/height_nav_header"
     android:gravity="bottom">
 
     <ImageView
@@ -20,10 +20,10 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="20dp"
+        android:padding="@dimen/padding_middle"
         android:text="RunnerApp"
         android:textColor="@color/white"
-        android:textSize="38sp"
+        android:textSize="@dimen/text_large_size"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/imageView"

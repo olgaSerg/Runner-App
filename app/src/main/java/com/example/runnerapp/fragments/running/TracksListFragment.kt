@@ -151,4 +151,16 @@ class TracksListFragment : Fragment(R.layout.fragment_tracks_list) {
             }
         }
     }
+
+    override fun onDestroyView() {
+        tracksRecyclerView = null
+        fab = null
+        fabClickListener = null
+        recyclerViewTrackItemClickListener = null
+        pullToRefresh = null
+        db = null
+        progressIndicator = null
+        state = null
+        super.onDestroyView()
+    }
 }

@@ -14,8 +14,8 @@
             android:id="@+id/text_view_duration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="150dp"
-            android:textSize="38sp"
+            android:layout_marginTop="@dimen/margin_xlarge"
+            android:textSize="@dimen/text_large_size"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/running_time"
-            android:textSize="24sp"
+            android:textSize="@dimen/text_size_running"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/text_view_duration" />
@@ -34,8 +34,8 @@
             android:id="@+id/text_view_distance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:textSize="38sp"
+            android:layout_marginTop="@dimen/margin_large"
+            android:textSize="@dimen/text_large_size"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/text_view_duration_title" />
@@ -45,7 +45,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/track_distance"
-            android:textSize="24sp"
+            android:textSize="@dimen/text_size_running"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/text_view_distance" />

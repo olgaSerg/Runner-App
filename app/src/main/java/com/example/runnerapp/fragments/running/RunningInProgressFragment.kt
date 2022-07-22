@@ -201,9 +201,20 @@ class RunningInProgressFragment : Fragment(R.layout.fragment_running_in_progress
         String.format("%02d:%02d:%02d,%02d", hour, min, sec, millis / 10)
 
     override fun onDestroy() {
-        super.onDestroy()
         if (!isReceiverUnregistered) {
             unregisterReceivers()
         }
+
+        textViewTimer = null
+        buttonFinish = null
+        buttonFinishClick = null
+        startTime = null
+        serviceTimerIntent = null
+        serviceLocationIntent = null
+        errorDialogClick = null
+        state = null
+        currentTrack = null
+        super.onDestroy()
     }
+
 }

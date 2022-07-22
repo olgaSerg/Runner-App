@@ -39,4 +39,10 @@ class RunningResultFragment : Fragment(R.layout.fragment_result_running_screen) 
             textViewDistance.text = distance.toString()
         }
     }
+
+    override fun onDestroyView() {
+        textViewDuration = null
+        textViewDistance = null
+        super.onDestroyView()
+    }
 }

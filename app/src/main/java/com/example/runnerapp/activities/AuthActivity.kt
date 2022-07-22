@@ -28,14 +28,13 @@ class AuthActivity : AppCompatActivity(), RegistrationFragment.OnLoginLinkClickL
 
         auth = Firebase.auth
 
-        if (savedInstanceState != null) {
-            state = savedInstanceState.getSerializable(STATE) as State
-        }
-
         val currentUser = auth.currentUser
         if (currentUser != null) {
             loadMainScreenActivity()
         } else {
+            if (savedInstanceState != null) {
+                state = savedInstanceState.getSerializable(STATE) as State
+            }
             displayState()
         }
     }

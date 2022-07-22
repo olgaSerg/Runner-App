@@ -8,13 +8,13 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingVertical="25dp">
+        android:paddingVertical="@dimen/padding_vertical_item">
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_view_start_date"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
+        android:textSize="@dimen/text_size_item"
         android:textStyle="bold"
         android:gravity="center"
         app:layout_constraintBottom_toTopOf="@+id/title_start_date"
@@ -38,7 +38,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textSize="20sp"
+            android:textSize="@dimen/text_size_item"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@+id/title_distance"
             app:layout_constraintEnd_toStartOf="@+id/text_view_duration"
@@ -50,7 +50,7 @@
             android:id="@+id/title_distance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="20dp"
+            android:layout_marginEnd="@dimen/margin_end_item"
             android:text="@string/track_distance"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/title_duration"
@@ -63,7 +63,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textSize="20sp"
+            android:textSize="@dimen/text_size_item"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@+id/title_duration"
             app:layout_constraintEnd_toEndOf="parent"
@@ -85,8 +85,8 @@
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:dividerInsetEnd="16dp"
-        app:dividerInsetStart="16dp"
+        app:dividerInsetEnd="@dimen/divider"
+        app:dividerInsetStart="@dimen/divider"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

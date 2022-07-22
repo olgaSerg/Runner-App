@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="toolbar_elevation">0dp</dimen>
+    <dimen name="navigation_padding">16dp</dimen>
+    <dimen name="text_middle_size">18sp</dimen>
+    <dimen name="text_large_size">38sp</dimen>
+    <dimen name="margin_splash_screen">100dp</dimen>
+    <dimen name="margin_authorization">50dp</dimen>
+    <dimen name="margin_top_authorization">20dp</dimen>
+    <dimen name="padding_authorization">10dp</dimen>
+    <dimen name="margin_small">10dp</dimen>
+    <dimen name="margin_large">50dp</dimen>
+    <dimen name="margin_notification">16dp</dimen>
+    <dimen name="margin_middle">20dp</dimen>
+    <dimen name="padding_small">10dp</dimen>
+    <dimen name="margin_xlarge">150dp</dimen>
+    <dimen name="text_size_running">24sp</dimen>
+    <dimen name="radius_size">10dp</dimen>
+    <dimen name="text_xx_large">45sp</dimen>
+    <dimen name="margin_xx_large">240dp</dimen>
+    <dimen name="text_xxx_large">50sp</dimen>
+    <dimen name="padding_vertical">30dp</dimen>
+    <dimen name="padding_horizontal">40dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="height_nav_header">192dp</dimen>
+    <dimen name="padding_middle">20dp</dimen>
+    <dimen name="divider">16dp</dimen>
+    <dimen name="text_small_size">16sp</dimen>
+    <dimen name="text_size_notification">26sp</dimen>
+    <dimen name="margin_start_notification">40dp</dimen>
+    <dimen name="padding_vertical_item">25dp</dimen>
+    <dimen name="text_size_item">20sp</dimen>
+    <dimen name="margin_end_item">20dp</dimen>
+</resources>

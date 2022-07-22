@@ -140,8 +140,9 @@ class LocationService : Service() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         sendBroadcast()
         fusedLocationProviderClient?.removeLocationUpdates(locationCallback)
+        fusedLocationProviderClient = null
+        super.onDestroy()
     }
 }

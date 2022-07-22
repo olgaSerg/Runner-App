@@ -330,8 +330,8 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
         displayState()
     }
 
-    override fun onRestart() {
-        super.onRestart()
+    override fun onResume() {
+        super.onResume()
         showFragmentPreview()
         checkLocationServiceEnabled()
     }
@@ -356,6 +356,16 @@ class MainScreenActivity : AppCompatActivity(), TracksListFragment.OnFABClickLis
                 displayState()
             }
         }
+    }
+
+    override fun onDestroy() {
+        toolbar = null
+        drawerLayout = null
+        navigationView = null
+        itemLogout = null
+        locationManager = null
+        geolocationEnabled = false
+        super.onDestroy()
     }
 }
 

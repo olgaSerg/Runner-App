@@ -111,7 +111,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                 checkFields(fields),
                 checkPasswordsMatch(password, passwordConfirmation),
                 checkMinPasswordLength(password),
-                checkMinPasswordLength(passwordConfirmation)
+                checkMinPasswordLength(passwordConfirmation),
+                checkEmail(email)
             )
 
             val isFormValid = validationResults.all { it }
@@ -123,6 +124,23 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                 buttonRegistration.isEnabled = true
             }
         }
+    }
+
+    private fun checkEmail(email: TextInputLayout): Boolean {
+        return if (!isEmailValid(email)) {
+            setEmailError(email)
+            false
+        } else {
+            true
+        }
+    }
+
+    private fun isEmailValid(email: TextInputLayout): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email.editText?.text.toString()).matches()
+    }
+
+    private fun setEmailError(email: TextInputLayout) {
+        email.error = "Введен некорректный email"
     }
 
     private fun checkPasswordsMatch(
@@ -208,5 +226,19 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         passwordConfirmation?.editText?.setText(state.passwordConfirmation)
         firstName?.editText?.setText(state.firstName)
         lastName?.editText?.setText(state.lastName)
+    }
+
+    override fun onDestroyView() {
+        email = null
+        firstName = null
+        lastName = null
+        password = null
+        passwordConfirmation = null
+        buttonRegistration = null
+        loginButton = null
+        loginLinkClickListener = null
+        state = null
+        signUpClickListener = null
+        super.onDestroyView()
     }
 }

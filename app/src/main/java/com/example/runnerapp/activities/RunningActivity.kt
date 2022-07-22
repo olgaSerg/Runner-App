@@ -135,6 +135,11 @@ class RunningActivity : AppCompatActivity(), RunningStartFragment.OnStartButtonC
         onBackPressed()
         return true
     }
+
+    override fun onDestroy() {
+        toolbar = null
+        super.onDestroy()
+    }
 }
 
 

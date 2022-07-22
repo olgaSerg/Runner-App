@@ -31,4 +31,9 @@ class RunningStartFragment : Fragment(R.layout.fragment_running_start) {
             startButtonClick?.onStartButtonClick()
         }
     }
+
+    override fun onDestroyView() {
+        startButtonClick = null
+        super.onDestroyView()
+    }
 }

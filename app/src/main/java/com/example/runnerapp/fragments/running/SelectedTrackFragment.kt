@@ -18,9 +18,6 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.maps.model.LatLngBounds
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.*
 
 class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     GoogleMap.OnMyLocationButtonClickListener,
@@ -149,5 +146,15 @@ class SelectedTrackFragment : Fragment(R.layout.fragment_selected_track),
     private fun formatDistance(distance: Int): String {
         val result = distance.toDouble() / 1000
         return result.toString()
+    }
+
+    override fun onDestroyView() {
+        textViewDistance = null
+        textViewDuration = null
+        selectedTrack = null
+        state = null
+        mMap?.clear()
+        mMap = null
+        super.onDestroyView()
     }
 }

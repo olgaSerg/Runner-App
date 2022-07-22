@@ -24,7 +24,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:background="@android:color/transparent"
-                android:elevation="0dp"
+                android:elevation="@dimen/toolbar_elevation"
                 app:navigationIcon="@drawable/ic_menu_24" />
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -50,7 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:padding="16dp"
+            android:padding="@dimen/navigation_padding"
             android:orientation="horizontal">
 
             <ImageView
@@ -68,7 +68,7 @@
                 android:layout_weight="5"
                 android:text="@string/logout"
                 android:gravity="center_vertical"
-                android:textSize="18sp" />
+                android:textSize="@dimen/text_middle_size" />
         </LinearLayout>
     </com.google.android.material.navigation.NavigationView>
 

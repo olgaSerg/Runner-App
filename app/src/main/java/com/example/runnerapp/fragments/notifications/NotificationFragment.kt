@@ -234,4 +234,17 @@ class NotificationFragment : Fragment(R.layout.fragment_notification) {
             state?.notification?.notifyAt = time
         }
     }
+
+    override fun onDestroyView() {
+        timePicker = null
+        datePicker = null
+        addNotificationListener = null
+        loadNotificationsListListener = null
+        addNotificationButton = null
+        deleteButton = null
+        saveButton = null
+        state = null
+        deleteNotificationClick = null
+        super.onDestroyView()
+    }
 }
