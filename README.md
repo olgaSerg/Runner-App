@@ -1,3 +1,4 @@
+![Runner-app](https://github.com/olgaSerg/Runner-app/blob/main/RunnerApp.gif)
 # Runner-App
 Application for jogging
 # Feachers
