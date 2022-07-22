@@ -1,7 +1,7 @@
 ![Runner-app](https://github.com/olgaSerg/Runner-app/blob/main/RunnerApp.gif)
 # Runner-App
 Application for jogging
-# Feachers
+# Features
 - user registration and authentication
 - route recording to local database and server
 - background track recording
