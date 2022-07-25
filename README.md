@@ -2,12 +2,12 @@
 # Runner-App
 Application for jogging
 # Features
-- user registration and authentication
-- route recording to local database and server
-- background track recording
-- displaying track on map
-- synchronizing tracks on different devices
-- setting notifications to remind user of a jogging
+- Sign in/Sign up
+- Tracks are recorded to both local SQLite database and to Firebase
+- Displaying tracks on Google Map
+- Synchronizing tracks across multiple devices
+- Background track recording
+- Setting up reminders to go for a run
 # Technologies used:
 - Kotlin 
 - Bolts 
