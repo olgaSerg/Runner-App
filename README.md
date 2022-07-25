@@ -1,6 +1,6 @@
 ![Runner-app](https://github.com/olgaSerg/Runner-app/blob/main/RunnerApp.gif)
 # Runner-App
-Application for jogging
+Fitness application for runners
 # Features
 - Sign in/Sign up
 - Tracks are recorded to both local SQLite database and to Firebase
