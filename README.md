@@ -13,7 +13,7 @@ Application for jogging
 - Bolts 
 - Firebase 
 - SQLite 
-- GoogleMaps 
+- Google Maps 
 - Services
 - Broadcast Receivers 
 - Material UI 
